@@ -1,0 +1,132 @@
+# v2: short action horizon, long input horizon, both the same frequency, total 100ms
+name: drag_20ms10ms
+
+sparse_obs_rgb_down_sample_steps: 10
+sparse_obs_rgb_horizon: 2
+
+sparse_obs_low_dim_down_sample_steps: 5
+sparse_obs_low_dim_horizon: 3
+
+sparse_obs_wrench_down_sample_steps: 4
+sparse_obs_wrench_horizon: 32
+
+# dense policy target rate: 100Hz
+# data augmentation runs on 100ms period
+dense_obs_low_dim_down_sample_steps: 1 # 500Hz -> 500Hz
+dense_obs_low_dim_horizon: 10 # 20ms
+
+dense_obs_wrench_down_sample_steps: 14 # 7000 -> 500Hz
+dense_obs_wrench_horizon: 10 # 20ms
+
+action_down_sample_steps: 1 # 500Hz -> 500Hz
+action_horizon: 5 # 10ms, make sure dense_action_duration_buffer_ms is longer than this duration
+
+shape_meta: &shape_meta
+  id_list: [0]
+  raw: # describes what exists in data
+    rgb_0:
+      shape: [3, 224, 224]
+      type: rgb
+    ts_pose_fb_0:
+      shape: [7]
+      type: low_dim
+    wrench_0:
+      shape: [6]
+      type: low_dim
+    rgb_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    robot_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    wrench_time_stamps_0:
+      shape: [1]
+      type: timestamp
+  obs: # describes observations loaded to memory 
+    rgb_0:
+      shape: [3, 224, 224]
+      type: rgb
+    robot0_eef_pos:
+      shape: [3]
+      type: low_dim
+    robot0_eef_rot_axis_angle:
+      shape: [6]
+      type: low_dim
+      rotation_rep: rotation_6d
+    robot0_eef_wrench:
+      shape: [6]
+      type: low_dim
+    rgb_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    robot_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    wrench_time_stamps_0:
+      shape: [1]
+      type: timestamp
+  action: # describes actions loaded to memory, computed from robot command
+    shape: [9] # 9 for reference pose, 9 for virtual target, 1 for stiffness
+    rotation_rep: rotation_6d
+  sample: # describes samples used in a batch
+          # keys here must exist in obs/action above.
+          # shape, type and rotation_rep are inherited from obs/action above.
+    obs:
+      sparse:
+        rgb_0:
+          horizon: ${task.sparse_obs_rgb_horizon} # int
+          down_sample_steps: ${task.sparse_obs_rgb_down_sample_steps} # int
+        robot0_eef_pos:
+          horizon: ${task.sparse_obs_low_dim_horizon} # int
+          down_sample_steps: ${task.sparse_obs_low_dim_down_sample_steps} # float
+        robot0_eef_rot_axis_angle: # exists in data
+          horizon: ${task.sparse_obs_low_dim_horizon} # int
+          down_sample_steps: ${task.sparse_obs_low_dim_down_sample_steps} # float
+        robot0_eef_wrench:
+          horizon: ${task.sparse_obs_wrench_horizon} # int
+          down_sample_steps: ${task.sparse_obs_wrench_down_sample_steps} # float
+      dense:
+        robot0_eef_pos:
+          horizon: ${task.dense_obs_low_dim_horizon} # int
+          down_sample_steps: ${task.dense_obs_low_dim_down_sample_steps} # float
+        robot0_eef_rot_axis_angle: # exists in data
+          horizon: ${task.dense_obs_low_dim_horizon} # int
+          down_sample_steps: ${task.dense_obs_low_dim_down_sample_steps} # float
+        robot0_eef_wrench:
+          horizon: ${task.dense_obs_wrench_horizon} # int
+          down_sample_steps: ${task.dense_obs_wrench_down_sample_steps} # float
+    action:
+      dense:
+        horizon: ${task.action_horizon}
+        down_sample_steps: ${task.action_down_sample_steps} # int
+    # timings
+    # Make sure training_duration_per_sparse_query is not an integer multiple of dense_action_duration_buffer_ms
+    # since H is obtained from np.arange(0, training_duration_per_sparse_query, dense_action_duration_buffer_ms)
+    dense_action_duration_buffer_ms: 210 # a number larger than dense action horizon duration
+    training_duration_per_sparse_query: 95 # Sample dense queries for this duration per sparse query
+    training_delta_time_between_dense_queries_ms: 10 # Delta time between dense queries. 
+
+
+task_name: &task_name flip_up
+dataset_path: ${oc.env:PYRITE_DATASET_FOLDERS}/drag_perturbation_clean
+# dataset_path: ${oc.env:PYRITE_DATASET_FOLDERS}/drag_test
+
+env_runner: # used in workspace for computing metrics
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+
+dataset:
+  _target_: diffusion_policy.dataset.hybrid_dataset.HybridDataset
+  shape_meta: *shape_meta
+  dataset_path: ${task.dataset_path}
+  sparse_query_frequency_down_sample_steps: 2
+  action_padding: False
+  temporally_independent_normalization: False
+  seed: 42
+  val_ratio: 0.05
+  normalize_wrench: True
+  augment_config:
+    nominal_length_m: 0.1 # used to trade off between translation and rotation
+    wrench_variation_score_threshold: 40 # 1.5N * h / 2
+    aug_max_force: 10
+    dim: 6
+    visualize: False

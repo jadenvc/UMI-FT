@@ -1,0 +1,3 @@
+[submodule "multimodal_representation"]
+	path = multimodal_representation
+	url = https://github.com/stanford-iprl-lab/multimodal_representation

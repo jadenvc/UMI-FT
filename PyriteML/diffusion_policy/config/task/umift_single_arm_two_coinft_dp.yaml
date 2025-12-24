@@ -1,0 +1,193 @@
+name: umift-dp-rgb-depth-ah_5_33-aD-wO-hG-aP
+
+# rgb vs. low_dim: raw data are either rgb images or low_dim vectors. frames are aligned within each type.
+# obs vs. action: obs data are used as policy input; action are used as labels for policy output.
+
+# down_sample_steps: how many steps to skip in the raw data for the given usage
+# horizon: how many steps to look ahead(action) or back(obs) after downsample for the given usage
+sparse_obs_rgb_down_sample_steps: 10
+sparse_obs_rgb_horizon: 2
+
+# keep ultrawide and depth horizon and down sampling steps the same as rgb. The horizon and downsampling will be applied to the mapping index which is the same length as rgb.
+sparse_obs_ultrawide_down_sample_steps: 10
+sparse_obs_ultrawide_horizon: 2
+
+# the depth horizon should be the same as rgb horizon, given the way the encoder is defined.
+sparse_obs_depth_down_sample_steps: 10
+sparse_obs_depth_horizon: 2
+
+sparse_obs_low_dim_down_sample_steps: 5
+sparse_obs_low_dim_horizon: 2
+
+sparse_obs_gripper_down_sample_steps: 1
+sparse_obs_gripper_horizon: 1
+
+sparse_obs_wrench_down_sample_steps: 4
+sparse_obs_wrench_horizon: 32
+
+sparse_action_down_sample_steps: 10
+sparse_action_horizon: 32   # 20 (3.33s) / 32 (5.33s) / 48 (8s) / 54 (9s) / 58 (9.66s) / 64 (10.66) 
+
+depth_clip: 0.5  # in [m]
+
+shape_meta: &shape_meta
+  # acceptable types: rgb, low_dim
+  # fields under raw and obs must be consistent with FlipUpDataset.raw_to_obs_action()
+  id_list: [0]
+  raw: # describes what exists in data
+    rgb_0:
+      shape: [3, 224, 224]
+      type: rgb
+    # ultrawide_0:
+    #   shape: [3, 224, 224]
+    #   type: rgb
+    depth_0:
+      shape: [3, 224, 224]
+      type: rgb
+    ts_pose_fb_0:
+      shape: [7]
+      type: low_dim
+    ts_pose_virtual_target_0:
+      shape: [7]
+      type: low_dim
+    gripper_0:
+      shape: [1]
+      type: low_dim
+    stiffness_0:
+      shape: [1]
+      type: low_dim
+    wrench_left_0:
+      shape: [6]
+      type: low_dim
+    wrench_right_0:
+      shape: [6]
+      type: low_dim
+    rgb_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    ultrawide_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    depth_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    robot_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    gripper_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    wrench_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    map_to_uw_idx_0: 
+      shape: [1]
+      type: index
+    map_to_d_idx_0:
+      shape: [1]
+      type: index
+
+  obs: # describes observations loaded to memory 
+    rgb_0:
+      shape: [3, 224, 224]
+      type: rgb
+    # ultrawide_0:
+    #   shape: [3, 224, 224]
+    #   type: rgb
+    depth_0:
+      shape: [3, 224, 224]
+      type: rgb
+      clip: ${task.depth_clip}
+    robot0_eef_pos:
+      shape: [3]
+      type: low_dim
+    robot0_eef_rot_axis_angle:
+      shape: [6]
+      type: low_dim
+      rotation_rep: rotation_6d
+    # robot0_gripper:
+    #   shape: [1]
+    #   type: low_dim
+    # robot0_eef_wrench_left:
+    #   shape: [6]
+    #   type: low_dim
+    # robot0_eef_wrench_right:
+    #   shape: [6]
+    #   type: low_dim
+    # IMPORTANT: rgb_time_stampe must ALWAYS be in the UMIFTDataset. This is the basis of sampling. 
+    rgb_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    # ultrawide_time_stamps_0:
+    #   shape: [1]
+    #   type: timestamp
+    depth_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    robot_time_stamps_0:
+      shape: [1]
+      type: timestamp
+    # gripper_time_stamps_0:
+    #   shape: [1]
+    #   type: timestamp
+    # wrench_time_stamps_0:
+    #   shape: [1]
+    #   type: timestamp
+    map_to_uw_idx_0:
+      shape: [1]
+      type: index
+    map_to_d_idx_0:
+      shape: [1]
+      type: index
+  action: # describes actions loaded to memory, computed from robot command
+    shape: [10] # 9 for reference pose, 9 for virtual target, 1 for stiffness, 1 for gripper, 1 for grasping force
+    rotation_rep: rotation_6d
+  sample: # describes samples used in a batch
+          # keys here must exist in obs/action above.
+          # shape, type and rotation_rep are inherited from obs/action above.
+    obs:
+      sparse:
+        rgb_0:
+          horizon: ${task.sparse_obs_rgb_horizon} # int
+          down_sample_steps: ${task.sparse_obs_rgb_down_sample_steps} # int
+        # ultrawide_0:
+        #   horizon: ${task.sparse_obs_ultrawide_horizon} # int
+        #   down_sample_steps: ${task.sparse_obs_ultrawide_down_sample_steps} # int
+        depth_0:
+          horizon: ${task.sparse_obs_depth_horizon} # int
+          down_sample_steps: ${task.sparse_obs_depth_down_sample_steps} # int
+        robot0_eef_pos:
+          horizon: ${task.sparse_obs_low_dim_horizon} # int
+          down_sample_steps: ${task.sparse_obs_low_dim_down_sample_steps} # float
+        robot0_eef_rot_axis_angle: # exists in data
+          horizon: ${task.sparse_obs_low_dim_horizon} # int
+          down_sample_steps: ${task.sparse_obs_low_dim_down_sample_steps} # float
+        # robot0_gripper:
+        #   horizon: ${task.sparse_obs_gripper_horizon} # int
+        #   down_sample_steps: ${task.sparse_obs_gripper_down_sample_steps} # float
+        # robot0_eef_wrench_left:
+        #   horizon: ${task.sparse_obs_wrench_horizon} # int
+        #   down_sample_steps: ${task.sparse_obs_wrench_down_sample_steps} # float
+        # robot0_eef_wrench_right:
+        #   horizon: ${task.sparse_obs_wrench_horizon} # int
+        #   down_sample_steps: ${task.sparse_obs_wrench_down_sample_steps} # float
+    action:
+      sparse:
+        horizon: ${task.sparse_action_horizon}
+        down_sample_steps: ${task.sparse_action_down_sample_steps} # int
+    training_duration_per_sparse_query: 5.5 # longer than the action horizon
+
+task_name: &task_name
+
+dataset_path: /store/real/hjchoi92/data/real_processed/umift/WBW2-addition-wristOvershoot-harderGrasp/acp_replay_buffer_gripper.zarr
+
+dataset:
+  _target_: diffusion_policy.dataset.umift_dataset.UmiFTDataset
+  shape_meta: *shape_meta
+  dataset_path: ${task.dataset_path}
+  sparse_query_frequency_down_sample_steps: 5
+  action_padding: True
+  temporally_independent_normalization: False
+  seed: 42
+  val_ratio: 0.05
+  normalize_wrench: True

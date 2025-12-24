@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyriteConfig"
+version = "0.0.1"
+
+[tool.ruff]
+# Set the maximum line length to 88 (Black's default)
+line-length = 88
+
+# Target Python 3.8+ (adjust based on your requirements)
+target-version = "py38"
+
+# Exclude common directories
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (E, W), Pyflakes (F), and isort (I) rules
+select = ["E", "W", "F", "I"]
+
+# Ignore specific rules
+ignore = [
+    "E501",  # Line too long - handled by formatter
+]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+
+# Use spaces for indentation
+indent-style = "space"
+
+# Automatically detect the appropriate line ending
+line-ending = "auto"
