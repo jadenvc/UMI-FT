@@ -2,7 +2,7 @@
 
 ## Setup ⚙️
 ```bash
-cd <path/to/umiFT>
+cd <path/to/UMI-FT/umift_data_collection>
 pip install -e .
 ```
 
