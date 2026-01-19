@@ -1,0 +1,29 @@
+# ignore data and output directories
+data/
+output/
+submodules/umi_day*
+
+__pycache__
+*.egg-info
+.DS_Store
+*.zip
+
+wired_collection/Python/Data/
+
+# output folder
+umi_day_data/
+intermediate_umi_output_gripper_test/
+intermediate_umi_output_before_detect_acuro/
+intermediate_umi_output/
+figs/
+
+# miscellaneous
+output.log
+scripts/profile_data_loader.py 
+
+
+# ignore HW specific files
+/wired_collection/Python/*.mat
+/wired_collection/Python/*.onnx
+/wired_collection/Python/*.json
+/wired_collection/Python/old_calibration_files
