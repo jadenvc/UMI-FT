@@ -1,14 +1,14 @@
 #!/bin/bash
 # NOTE: conda activate umi_day
-# Usage: <umift_parent_directory>$ bash bash/data_post_process_gopro_iphone.sh
+# Usage: <umift_data_parent_directory>$ bash bash/data_post_process_gopro_iphone.sh
 
-umift_parent_dir=$(pwd)
+umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi gopro+iphone data are saved on your computer
-session_name="cup-arrangement-test" # (USER TODO) change this to the session name of the raw umi gopro+iphone data
+session_name="zucchini-wild-b1" # (USER TODO) change this to the session name of the raw umi gopro+iphone data
 skip_stages="visualize" # (USER TODO) option \in {"visualize", "", "group", "gopro_timesync", "align"}. change this to "visualize" if you want to skip the visualization stage, or "" to run all stages including visualize 
-flatten_coinft_folder_structure=True # (USER TODO) option \in {True, False}. change this to "True" if this is the first time you are running this script for this session, or "False" if you already done so
+flatten_coinft_folder_structure=False # (USER TODO) option \in {True, False}. change this to "True" if this is the first time you are running this script for this session, or "False" if you already done so
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 
  
@@ -74,15 +74,19 @@ if [ ! -d $iphone_data_dir ]; then
 fi
 
 
-cd $umift_parent_dir/submodules/umi_day/umi_day/demonstration_processing
-# export PYTHONPATH=$umift_parent_dir/submodules/umi_day:$PYTHONPATH
+cd $umift_data_parent_dir/../umi_day/umi_day/demonstration_processing
+# cd $umift_data_parent_dir/submodules/umi_day/umi_day/demonstration_processing
+# export PYTHONPATH=$umift_data_parent_dir/submodules/umi_day:$PYTHONPATH
+
+# This used to be active
 export PYTHONPATH=$(pwd)/..:$(pwd)/../..:$(pwd)/../../..:
-export PYTHONPATH="$umift_parent_dir/submodules/umi_day/umi_day:$(pwd)/..:$(pwd)/../..:$(pwd)/../../..:$PYTHONPATH"
+# export PYTHONPATH=$(pwd)/../../..:
+
 
 #$(pwd)/../../../universal_manipulation_interface
 # export PYTHONPATH=$PYTHONPATH:$(pwd)
 # export PYTHONPATH=$PYTHONPATH:$(pwd)/..
-# cd $umift_parent_dir
+# cd $umift_data_parent_dir
 # export PYTHONPATH=$PYTHONPATH:$(pwd)
 if [ -z "$skip_stages" ]; then
     python process_demos_iphone.py \

@@ -1,0 +1,3 @@
+[submodule "umi_day/deps/universal_manipulation_interface"]
+	path = umi_day/deps/universal_manipulation_interface
+	url = git@github.com:real-stanford/universal_manipulation_interface.git

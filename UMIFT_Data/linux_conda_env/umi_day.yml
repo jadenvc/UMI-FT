@@ -401,7 +401,7 @@ dependencies:
   - xorg-xextproto=7.3.0=hb9d3cd8_1004
   - xorg-xorgproto=2024.1=hb9d3cd8_1
   - xxhash=0.8.2=hd590300_0
-  - xz=5.2.6=h166bdaf_0
+  - xz
   - yaml=0.2.5=h7f98852_2
   - yarl=1.18.3=py310h89163eb_1
   - zarr=2.16.1=pyhd8ed1ab_0

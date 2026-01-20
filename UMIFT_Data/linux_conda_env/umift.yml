@@ -165,6 +165,7 @@ dependencies:
   - nest-asyncio=1.6.0
   - nlohmann_json=3.11.2
   - numpy-base=2.1.1
+  - omegaconf  
   - open3d=0.18.0
   - opencv=4.10.0
   - openexr=3.3.1
