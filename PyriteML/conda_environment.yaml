@@ -5,15 +5,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9
   - pytorch
   - torchvision
   - torchaudio
-  - huggingface_hub
-  - wandb
   - timm
   - diffusers
   - accelerate
+  - huggingface_hub
+  - wandb
   - threadpoolctl
   - plotly
   - dill

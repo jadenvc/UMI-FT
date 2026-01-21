@@ -33,8 +33,6 @@ pip install -e .
 ```
 4. Setup environment variables: add the following to your .bashrc or .zshrc, edit according to your local path.
 ``` sh
-# where the collected raw data folders are
-export PYRITE_RAW_DATASET_FOLDERS=$HOME/data/real
 # where the post-processed data folders are
 export PYRITE_DATASET_FOLDERS=$HOME/data/real_processed
 # Each training session will create a folder here.

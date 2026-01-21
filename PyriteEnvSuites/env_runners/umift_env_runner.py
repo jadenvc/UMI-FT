@@ -18,7 +18,6 @@ from PyriteUtility.spatial_math import spatial_utilities as su
 
 from PyriteEnvSuites.envs.task.manip_server_umift_env import ManipServerUMIFTEnv
 
-# from PyriteEnvSuites.envs.wrapper.record import RecordWrapper
 from PyriteEnvSuites.utils.env_utils import (
     pose9g1_to_traj,
     pose9pose9s1a2_to_traj,
@@ -43,17 +42,17 @@ control_log_folder_path = os.environ.get("PYRITE_CONTROL_LOG_FOLDERS")
 def main():
     control_para = {
         "raw_time_step_s": 0.0167,  # dt of raw data collection. Used to compute time step from time_s such that the downsampling according to shape_meta works.
-        "slow_down_factor": 5,  # 3 for flipup, 1.5 for wiping, 5 original
-        "sparse_execution_horizon": 4,  # 12 for flipup, 8/24 for wiping
+        "slow_down_factor": 5,  # slow down policy execution by this factor
+        "sparse_execution_horizon": 4, # 
         "max_duration_s": 3500,
         "gripper_action_scale": 1000,
-        "use_audio": True,
+        "use_audio": False,
         "gripper_lookahead_steps": 0,  # how many steps to look ahead for gripper action
         "set_wrench_fb_to_zero": False,
         "test_nominal_target": False,  # False to follow virtual target
         "test_nominal_target_stiffness": -1,  # -1, for a 'no force case'. 1500, for a quick test without force.
         "fix_orientation": False,
-        "pausing_mode": True,
+        "pausing_mode": False, # set to True to pause before executing each horizon, for debugging
         "device": "cuda",
     }
     pipeline_para = {
@@ -61,14 +60,10 @@ def main():
             "socket_ip": "192.168.2.18",
             "ports": [5555],
         },
-        # "ckpt_path": "/2025.03.11_20.27.56_umi-ft-dp",
-        # "ckpt_path": "/UMIFT-ZUCCHINI-RGB-DEPTH-AH3_33-DS8",
-        # "ckpt_path": "/UMIFT-WBW-VanillaDP-aD-wO-hG",
         "ckpt_path": "/2025.07.16_19.47.42_umift-audio_audio",
         "hardware_config_path": hardware_config_folder_path + "/right_arm_coinft.yaml",
-        # "episode_data_save_path": "/shared_local/data/raw/umift_debug_playback/debug/",
         "control_log_path": control_log_folder_path + "/temp/",
-        "audio_device_id": [5],  # e.g. [0, 1] for two microphones
+        "audio_device_id": [5],  # only needed for audio input
         "depth_downsample_correction": 2,  # depth physically streams at 60Hz during data collection. Effectively downsampled to 30Hz (to match streaming) then effectively upsampled to 60Hz for ease of time-syncing with rgb. So the downsampling on streamed depth (30Hz) should be divided by 2, because this shape meta downsampling is on 60Hz.
     }
     verbose = 1
@@ -316,22 +311,8 @@ def main():
 
     horizon_count = 0
 
-    # plot the rgb stream, confirm it is correct
-    # sleep 1 s
+    # plot the rgb/depth stream, confirm it is correct
     time.sleep(2)
-    # while True:
-    #     obs_raw = env.get_observation_from_buffer()
-    #
-    #     if len(id_list) == 1:
-    #         rgb = obs_raw["rgb_0"][-1]
-    #     else:
-    #         rgb = np.vstack([obs_raw[f"rgb_{i}"][-1] for i in id_list])
-
-    #     bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-    #     cv2.imshow("image", bgr)
-    #     key = cv2.waitKey(10)  # Allows OpenCV to update
-    #     if key == ord("q"):  # Exit if 'q' is pressed
-    #         break
 
     while True:
         obs_raw = env.get_observation_from_buffer()
