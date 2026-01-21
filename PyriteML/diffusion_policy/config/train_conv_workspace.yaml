@@ -128,7 +128,6 @@ ema:
 dataloader:
   batch_size: 128 # 128 seems to work fine.
   num_workers: 32 # debug 32
-  # num_workers: 0
   shuffle: True
   pin_memory: True
   persistent_workers: True # debug: True

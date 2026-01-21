@@ -348,13 +348,19 @@ class TimmObsEncoderWithForce(ModuleAttrMixin):
                 )
                 n_f_features = len(wrench_keys)
 
+                n_features = n_v_features + n_f_features
+
                 self.linear_projection = nn.Linear(
-                    self.v_feature_dim * n_v_features
-                    + self.f_feature_dim * n_f_features,
-                    max(
-                        self.v_feature_dim, self.f_feature_dim
-                    ),  # these two should be the same when both are available
+                self.v_feature_dim * n_features, self.v_feature_dim
                 )
+
+                # self.linear_projection = nn.Linear(
+                #     self.v_feature_dim * n_v_features
+                #     + self.f_feature_dim * n_f_features,
+                #     max(
+                #         self.v_feature_dim, self.f_feature_dim
+                #     ),  # these two should be the same when both are available
+                # )
                 if position_encoding == "learnable":
                     self.position_embedding = torch.nn.Parameter(
                         torch.randn(

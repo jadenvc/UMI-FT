@@ -1,4 +1,4 @@
-name: UMIFT-ZUCCHINI-ULTRAWIDE-DEPTH-AH3_33-DS4
+name: UMIFT-ZUCCHINI-AH3-DS8
 
 # rgb vs. low_dim: raw data are either rgb images or low_dim vectors. frames are aligned within each type.
 # obs vs. action: obs data are used as policy input; action are used as labels for policy output.
@@ -26,7 +26,7 @@ sparse_obs_wrench_down_sample_steps: 4
 sparse_obs_wrench_horizon: 32
 
 sparse_action_down_sample_steps: 10
-sparse_action_horizon: 20   # 20 (3.33s) / 32 (5.33s) / 48 (8s) / 54 (9s) / 58 (9.66s) / 64 (10.66) 
+sparse_action_horizon: 20   # 12 (2s) / 20 (3.33s) / 32 (5.33s) / 48 (8s) / 54 (9s) / 58 (9.66s) / 64 (10.66) 
 
 depth_clip: 0.5  # in [m]
 
@@ -35,12 +35,12 @@ shape_meta: &shape_meta
   # fields under raw and obs must be consistent with FlipUpDataset.raw_to_obs_action()
   id_list: [0]
   raw: # describes what exists in data
-    # rgb_0:
-    #   shape: [3, 224, 224]
-    #   type: rgb
-    ultrawide_0:
+    rgb_0:
       shape: [3, 224, 224]
       type: rgb
+    # ultrawide_0:
+    #   shape: [3, 224, 224]
+    #   type: rgb
     depth_0:
       shape: [3, 224, 224]
       type: rgb
@@ -88,12 +88,12 @@ shape_meta: &shape_meta
       type: index
 
   obs: # describes observations loaded to memory 
-      # rgb_0:
-      #   shape: [3, 224, 224]
-      #   type: rgb
-    ultrawide_0:
+    rgb_0:
       shape: [3, 224, 224]
       type: rgb
+    # ultrawide_0:
+    #   shape: [3, 224, 224]
+    #   type: rgb
     depth_0:
       shape: [3, 224, 224]
       type: rgb
@@ -147,12 +147,12 @@ shape_meta: &shape_meta
           # shape, type and rotation_rep are inherited from obs/action above.
     obs:
       sparse:
-        # rgb_0:
-        #   horizon: ${task.sparse_obs_rgb_horizon} # int
-        #   down_sample_steps: ${task.sparse_obs_rgb_down_sample_steps} # int
-        ultrawide_0:
-          horizon: ${task.sparse_obs_ultrawide_horizon} # int
-          down_sample_steps: ${task.sparse_obs_ultrawide_down_sample_steps} # int
+        rgb_0:
+          horizon: ${task.sparse_obs_rgb_horizon} # int
+          down_sample_steps: ${task.sparse_obs_rgb_down_sample_steps} # int
+        # ultrawide_0:
+        #   horizon: ${task.sparse_obs_ultrawide_horizon} # int
+        #   down_sample_steps: ${task.sparse_obs_ultrawide_down_sample_steps} # int
         depth_0:
           horizon: ${task.sparse_obs_depth_horizon} # int
           down_sample_steps: ${task.sparse_obs_depth_down_sample_steps} # int
@@ -179,13 +179,13 @@ shape_meta: &shape_meta
 
 task_name: &task_name
 
-dataset_path: /store/real/hjchoi92/data/real_processed/umift/skewer-zucchini/acp_replay_buffer_gripper.zarr
+dataset_path: /store/real/hjchoi92/data/real_processed/umift/zucchini-wild-test-for-coderelease/acp_replay_buffer_gripper.zarr
 
 dataset:
   _target_: diffusion_policy.dataset.umift_dataset.UmiFTDataset
   shape_meta: *shape_meta
   dataset_path: ${task.dataset_path}
-  sparse_query_frequency_down_sample_steps: 4
+  sparse_query_frequency_down_sample_steps: 8
   action_padding: True
   temporally_independent_normalization: False
   seed: 42
