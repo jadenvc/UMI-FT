@@ -23,8 +23,7 @@ if "PYRITE_DATASET_FOLDERS" not in os.environ:
 dataset_folder_path = os.environ.get("PYRITE_DATASET_FOLDERS")
 
 # Config for umift (single robot)
-dataset_path = "/store/real/hjchoi92/data/real_processed/umift/WBW-iph/acp_replay_buffer_gripper.zarr"  # IMPORTANT: Make sure to change the mute flags too! -HC
-# dataset_path = dataset_folder_path + "/umift/acp_replay_buffer_gripper.zarr/"
+dataset_path = "/store/real/hjchoi92/data/real_processed/umift/zucchini-wild-test-for-coderelease/acp_replay_buffer_gripper.zarr"  # IMPORTANT: Make sure to change the mute flags too! -HC
 id_list = [0]
 
 wrench_moving_average_window_size = 200  # should be around 1s of data
@@ -71,7 +70,7 @@ stiffness_estimation_para = {
     # penetration estimator
     "k_max": 3000,  # 1cm 50N
     "k_min": 200,  # 1cm 2.5N
-    "f_low": 2.85,  # 0.5,
+    "f_low": 2.0,  # 0.5,
     # "f_low": 1.5,
     "f_high": 7,  # 5,
     "dim": 3,
@@ -91,14 +90,6 @@ if flag_plot:
 def process_episode(ep, ep_data, id_list):
     for key in ep_data.keys():
         print(key)
-
-    # # HC: TODO Debugging
-    # if f"robot_time_stamps_0" not in ep_data.keys():
-    #     print("Robot time stamp not found in episode: ", ep)
-    #     return
-
-    # if f"robot_time_stamps_0" in ep_data.keys():
-    #     print("Of course you see this in episode:", ep)
 
     for id in id_list:
         print(f"Processing episode {ep}, id {id}: ")

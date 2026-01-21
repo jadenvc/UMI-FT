@@ -94,10 +94,7 @@ def process_ft_img_campose_gripper(args):
                                         side = args.gripper_side)
 
 
-    # aligned_data_dict = {'ft_dic_trimmed': ft_dic, 
-    #              'campose_dic_trimmed': campose_dic, 
-    #              'gripper_dic_trimmed': gripper_dic,
-    #              'image_dict_trimmed': image_dict_trimmed}
+
     aligned_data_dict = {'ft_dic_trimmed': ft_dic, 
                  'campose_dic_trimmed': campose_dic, 
                  'gripper_dic_trimmed': gripper_dic,
@@ -131,17 +128,6 @@ if __name__ == '__main__':
     ### process ft, image, campose data, and create time-aligned zarr dataset with data + timestamps
     pose_gripper_img_ft_dict, expected_H, expected_W = process_ft_img_campose_gripper(args)
 
-    # image_data = pose_gripper_img_ft_dict['image_dict_trimmed']['data']
-    # # policy_transform_im = get_image_transform_with_border(
-    # #     in_res=(320, 240), out_res=(224, 224), bgr_to_rgb=True)
-    # for key, value in image_data.items():
-    #     print(f"Image {key} shape: {value['imgData'].shape}")
-    #     img_pre = value['imgData'][0, ...]
-    #     import matplotlib.pyplot as plt
-    #     fig, ax = plt.subplots(1, 2)
-    #     ax[0].imshow(img_pre)
-    #     ax[0].set_title('Original Image')
-    #     plt.show()
 
     zarr_output_path = os.path.join(args.output_dir, 'replay_buffer_gripper.zarr')
     print(f'Creating zarr dataset, to: {zarr_output_path}')

@@ -1,14 +1,14 @@
 #!/bin/bash
-# NOTE: conda activate umift
+# NOTE: conda activate umiFT
 # Usage: <umift_data_parent_directory>$ bash bash/data_post_process_multimodal.sh
 
 # get the current directory
 umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
-raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi gopro+iphone data are saved on your computer
-session_name="zucchini-wild-b1" # (USER TODO) change this to the session name of the raw umi gopro+iphone data
-gripper_side="left" # (USER TODO) change this to the gripper side used in the session
+raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi iphone data are saved on your computer
+session_name="zucchini-wild-b1" # (USER TODO) change this to the session name of the raw umi iphone data
+gripper_side="left" # (USER TODO) change this to the gripper side used in the session. left is default.
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 
 
@@ -33,7 +33,7 @@ calibration_dir=$umift_data_parent_dir/gripper_calibration
 # │   │   │   ├── ...
 ## (output from data processing):
 # │   ├── processed_data/ (output from data processing)
-# │   │   ├── gopro_iphone/
+# │   │   ├── iphone/
 # │   │   ├── all/
 
 iphone_data_dir=$umi_data_folder/UMI_iPhone
@@ -54,7 +54,7 @@ if [ ! -d $iphone_data_dir ]; then
     exit 1
 fi
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 # Step 2: extract the data from  the iphone and gopro
 export PYTHONPATH=$(pwd)/../umi_day:$PYTHONPATH
 export PYTHONPATH=$(pwd)/../PyriteUtility:$PYTHONPATH

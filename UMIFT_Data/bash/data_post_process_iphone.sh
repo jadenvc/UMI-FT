@@ -5,8 +5,8 @@
 umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
-raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi gopro+iphone data are saved on your computer
-session_name="zucchini-wild-b1" # (USER TODO) change this to the session name of the raw umi gopro+iphone data
+raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi iphone data are saved on your computer
+session_name="zucchini-wild-b1" # (USER TODO) change this to the session name of the raw umi iphone data
 skip_stages="visualize" # (USER TODO) option \in {"visualize", "", "group", "gopro_timesync", "align"}. change this to "visualize" if you want to skip the visualization stage, or "" to run all stages including visualize 
 flatten_coinft_folder_structure=False # (USER TODO) option \in {True, False}. change this to "True" if this is the first time you are running this script for this session, or "False" if you already done so
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
@@ -23,10 +23,6 @@ multimodal_data_output_dir=$umi_data_folder/processed_data/all # this is where t
 # │   │   ├── export_<YYYY-MM-DD_TIME>/
 # │   │   │   ├── <TIME>_<side>.json
 # │   │   │   ├── ...
-# │   ├── DCIM/
-# │   │   ├── 100GOPRO/
-# │   │   │   ├── <GOPRO_FILE>.MP4
-# │   │   │   ├──  ...
 # │   ├── coinft/
 # │   │   ├── YYYY-MM-DD/
 # │   │   │   ├── <session_name>_<TIME>_LF.csv
@@ -48,6 +44,7 @@ ft_data_dir=$umi_data_folder/coinft
 # # # │   ├── coinft/
 # # │   │   ├── <session_name>_<TIME>_LF.csv
 # # │   │   ├── ...
+# # This is done if flatten_coinft_folder_structure is True
 
 if [ "$flatten_coinft_folder_structure" = True ]; then
     for subdir in "$ft_data_dir"/*/; do
@@ -75,19 +72,8 @@ fi
 
 
 cd $umift_data_parent_dir/../umi_day/umi_day/demonstration_processing
-# cd $umift_data_parent_dir/submodules/umi_day/umi_day/demonstration_processing
-# export PYTHONPATH=$umift_data_parent_dir/submodules/umi_day:$PYTHONPATH
-
-# This used to be active
 export PYTHONPATH=$(pwd)/..:$(pwd)/../..:$(pwd)/../../..:
-# export PYTHONPATH=$(pwd)/../../..:
 
-
-#$(pwd)/../../../universal_manipulation_interface
-# export PYTHONPATH=$PYTHONPATH:$(pwd)
-# export PYTHONPATH=$PYTHONPATH:$(pwd)/..
-# cd $umift_data_parent_dir
-# export PYTHONPATH=$PYTHONPATH:$(pwd)
 if [ -z "$skip_stages" ]; then
     python process_demos_iphone.py \
         group.iphone_dir=$iphone_data_dir \

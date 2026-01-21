@@ -223,17 +223,10 @@ if __name__ == "__main__":
     
     if task_to_perform == 'merge_zarr':
         input_zarrs = [
-            # "/store/real/hjchoi92/data/real/umift/lightbulb-soft-b0/processed_data/all/acp_replay_buffer_gripper.zarr",
-            # "/store/real/hjchoi92/data/real/umift/lightbulb-soft-b1/processed_data/all/acp_replay_buffer_gripper.zarr"
-            # "/store/real/hjchoi92/data/real/umift/zucchini-wild-b0/processed_data/all/acp_replay_buffer_gripper.zarr",
-            # "/store/real/hjchoi92/data/real/umift/zucchini-wild-b1/processed_data/all/acp_replay_buffer_gripper.zarr",
-            # "/store/real/hjchoi92/data/real/umift/zucchini-wild-b2/processed_data/all/acp_replay_buffer_gripper.zarr",
-            # "/store/real/hjchoi92/data/real/umift/zucchini-wild-b3/processed_data/all/acp_replay_buffer_gripper.zarr",
-            # "/store/real/hjchoi92/data/real/umift/zucchini-wild-b4/processed_data/all/acp_replay_buffer_gripper.zarr",
-            # "/store/real/hjchoi92/data/real/umift/zucchini-wild-b5/processed_data/all/acp_replay_buffer_gripper.zarr"
-            "/store/real/hjchoi92/data/real/umift/cup-arrangement-test/processed_data/all/acp_replay_buffer_gripper.zarr"
+            "/store/real/hjchoi92/data/real/umift/zucchini-wild-b0/processed_data/all/acp_replay_buffer_gripper.zarr",
+            "/store/real/hjchoi92/data/real/umift/zucchini-wild-b1/processed_data/all/acp_replay_buffer_gripper.zarr"
         ]
-        output_zarr = "/store/real/hjchoi92/data/real_processed/umift/cup-arrangement-test/acp_replay_buffer_gripper.zarr"
+        output_zarr = "/store/real/hjchoi92/data/real_processed/umift/zucchini-wild-test-for-coderelease/acp_replay_buffer_gripper.zarr"
 
         print(f"Merging {len(input_zarrs)} input Zarr datasets into one...")
 

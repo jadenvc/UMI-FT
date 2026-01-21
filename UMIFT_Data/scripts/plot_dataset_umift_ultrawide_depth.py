@@ -21,7 +21,7 @@ if "PYRITE_DATASET_FOLDERS" not in os.environ:
 dataset_folder_path = os.environ.get("PYRITE_DATASET_FOLDERS")
 
 # dataset_path = dataset_folder_path + "/umi-ft/WBW/acp_replay_buffer_gripper.zarr"
-dataset_path = "/store/real/hjchoi92/data/real_processed/umift/cup-arrangement-test/acp_replay_buffer_gripper.zarr"
+dataset_path = "/store/real/hjchoi92/data/real_processed/umift/zucchini-wild-test-for-coderelease/acp_replay_buffer_gripper.zarr"
 # dataset_path = "/store/real/hjchoi92/data/real/umift/zucchini-wild-b0/processed_data/all/acp_replay_buffer_gripper.zarr"
 
 print("Loading dataset from: ", dataset_path)
