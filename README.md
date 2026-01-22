@@ -351,6 +351,7 @@ tar -xvzf onnxruntime-linux-x64-1.16.3.tgz
 
 # 3. Move it to the required location (Requires sudo)
 sudo mv onnxruntime-linux-x64-1.16.3 /opt/onnxruntime
+```
 
 
 
