@@ -256,10 +256,9 @@ Wrench data order assumption: [Fx, Fy, Fz, Mx, My, Mz]
 
 Wrench body frame and world frame transformation reference from [Modern Robotics, Lynch & Park](https://hades.mech.northwestern.edu/images/7/7f/MR.pdf#page=126.68) 
 
-
-
-umift_data_visualization.png
-
+### 7. Data Visualization
+Run `{repo_root}/UMIFT_Data/scripts/plot_dataset_umift_ultrawide_depth.py` with the proper dataset path.
+![UMI-FT Visualization](umift_data_visualization.png)
 
 # Policy Training
 
