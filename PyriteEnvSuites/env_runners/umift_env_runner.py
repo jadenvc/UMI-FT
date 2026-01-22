@@ -220,7 +220,6 @@ def main():
             "audio_device_id": pipeline_para["audio_device_id"],
         }
 
-    # HC TODO: MAKE SURE THE OBS ENCODER SORTING ORDER IS CONSISTENT WITH INFERENCE
     env = ManipServerUMIFTEnv(
         camera_res_hw=(image_height, image_width),
         hardware_config_path=pipeline_para["hardware_config_path"],

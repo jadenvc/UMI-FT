@@ -65,14 +65,13 @@ class MultiIPhoneCameraUMIFT:
                 )
 
                 camera_name = f"camera{i}_{stream_name}"
-                # HC TODO: double check resolution
                 cameras[camera_name] = IPhoneCameraUMIFT(
                     name=camera_name,
                     shm_manager=shm_manager,
                     server_ip=server_ip,
                     server_port=port + port_offset,
                     resolution=(320, 240),
-                    capture_fps=capture_fps, # TODO: perhaps adjust for 10Hz ultrawide
+                    capture_fps=capture_fps, 
                     put_fps=put_fps,
                     put_downsample=put_downsample,
                     get_max_k=get_max_k,

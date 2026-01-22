@@ -211,7 +211,6 @@ def reorg_demo_data_ordered_by_time_ft(data_dict, data_prefix='ft'):
     RF_count = 0
     for key, value in data_dict.items():
         # Hack for FT data: add Z to the end of the timestamp to make it UTC
-        # HC TODO: clean this part. Probably at fetch_ft_time_cvs_file_level()
         value[f"{data_prefix}TimeStamp"] += 'Z'  # add Z to the end of the timestamp
 
         if key.endswith('_LF'):

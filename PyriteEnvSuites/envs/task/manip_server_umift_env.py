@@ -22,7 +22,7 @@ input_w = 224
 input_h = 224
 camera_obs_latency = 0.125
 
-# HC TODO: update mask file
+#update mask file. this is located in {repo}/PyriteUtility/PyriteUtility/data_pipeline/umift_mask.json
 mask_file_path = "/shared_local/configs/umift/umift_mask.json"
 
 
@@ -52,8 +52,6 @@ class ManipServerUMIFTEnv:
             cv2.fillPoly(mask, [mask_pts], (0, 0, 0))
             self.mask = mask
 
-        # HC TODO: I probably don't have to touch the manipulation server itself.. as it deals with mostly lower level stuff.
-        # HC TODO: Do double check the grasp force definition.
         # manipulation server
         server = ms.ManipServer()
         print("Loading hardware config from: ", hardware_config_path)
@@ -79,7 +77,6 @@ class ManipServerUMIFTEnv:
                 stream_names.append("ultrawide_rgb")
             elif "depth" in key:
                 stream_names.append("depth")
-        # HC TODO DEBUUG
         print(f"[DEBUG] stream_names: {stream_names}")
         print(f"[DEBUG] vision_key: {vision_key}")
 
@@ -168,7 +165,7 @@ class ManipServerUMIFTEnv:
         print("created camera")
         print("------------------------------------------------")
 
-        # HC: comment this out for rollotus
+        # comment this out for rollotus
         # print("================================================")
         # print("creating multi camera visualizer")
         # multi_cam_vis = MultiCameraVisualizer(
@@ -405,7 +402,6 @@ class ManipServerUMIFTEnv:
                     self.rgb_timestamp_s[id] = self.last_camera_data[camera_id][
                         "timestamp"
                     ][-self.query_sizes["sparse"]["rgb"] :]
-                    # HC: TODO: implement timer safety check
                     # print(f"[DEBUG] {camera_id} rgb timestamp (last): {self.rgb_timestamp_s[id][-1]:.10f}")
                     # print(f"[DEBUG] id={id}, current={self.rgb_timestamp_s[id][-1]:.10f}, prev={self.prev_rgb_timestep[id]:.10f}, counter={self.rgb_repeat_counter[id]}")
                     # test = np.isclose(self.rgb_timestamp_s[id][-1], self.prev_rgb_timestep[id], atol=1e-5, rtol=0)

@@ -106,7 +106,7 @@ class SequenceSamplerUmiFT:
                         ]
                     )
                     + 1
-                )  # HC TODO: strictly speaking, I'm not sure if the +1 is needed, but shouldn't have much effect. Maybe later after searchsorted, the index will find the right place?
+                )  
 
                 rgb_start_time = np.squeeze(
                     replay_buffer["data"][episode]["obs"][f"rgb_time_stamps_{id}"][
@@ -255,7 +255,6 @@ class SequenceSamplerUmiFT:
                 )
 
                 ## II.3 find min
-                # HC TODO: Probably doesn't matter practically but would we want to compare all modalities here?
                 if not action_padding:
                     # if no action padding, truncate the indices to query so the last query point
                     #  still has access to the whole horizon of actions
@@ -282,7 +281,7 @@ class SequenceSamplerUmiFT:
             last_rgb_idx = 1e9
             first_rgb_idx = -1
 
-            # HC TODO: when going bimanual, this part needs to be modified. Doesn't save anything id specific.
+            # HC TODO: when going bimanual, this part needs to be modified. 
             for id in id_list:
                 rgb_times = np.squeeze(
                     replay_buffer["data"][episode]["obs"][f"rgb_time_stamps_{id}"]

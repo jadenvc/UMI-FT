@@ -46,7 +46,6 @@ def decode_depth_base64_to_numpy(base64_string, max_depth=1.0):
 
     return depth_array
 
-# HC TODO: UMIFT specific max_depth assignment.
 def decode_depth_base64_to_numpy_raw(base64_string, max_depth=0.5):
     # Decode Base64 string to bytes
     depth_bytes = base64.b64decode(base64_string)

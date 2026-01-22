@@ -530,7 +530,6 @@ def sparse_obs_to_obs_sample(
             )
         )
 
-        # HC TODO: fully understand. Why last pose instead of first?
         # solve relative obs
         base_SE3_WT.append(SE3_WT[-1])
         SE3_base_i = su.SE3_inv(base_SE3_WT[id]) @ SE3_WT
@@ -539,7 +538,6 @@ def sparse_obs_to_obs_sample(
         sparse_obs_processed[f"robot{id}_eef_pos"] = pose9_relative[..., :3]
         sparse_obs_processed[f"robot{id}_eef_rot_axis_angle"] = pose9_relative[..., 3:]
 
-        # HC TODO: double check
         # solve relative wrench
         # Note:
         #   The correct way to compute relative wrench requires
@@ -906,7 +904,6 @@ def action21_to_action_sample(
         SE3 = su.pose9_to_SE3(pose9)
         SE3_vt = su.pose9_to_SE3(pose9_vt)
 
-        # HC TODO: double check
         # solve relative obs
         SE3_WBase_inv = su.SE3_inv(SE3_WBase)
         SE3_relative = SE3_WBase_inv @ SE3
@@ -1032,7 +1029,6 @@ def action21_postprocess(
     """Convert policy outputs from relative pose to world frame pose
     Used in online inference
     """
-    # HC TODO: double check
 
     action_SE3_absolute = [np.array] * len(id_list)
     action_SE3_vt_absolute = [np.array] * len(id_list)
