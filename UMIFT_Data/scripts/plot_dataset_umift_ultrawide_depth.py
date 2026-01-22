@@ -20,19 +20,15 @@ if "PYRITE_DATASET_FOLDERS" not in os.environ:
     raise ValueError("Please set the environment variable PYRITE_DATASET_FOLDERS")
 dataset_folder_path = os.environ.get("PYRITE_DATASET_FOLDERS")
 
-# dataset_path = dataset_folder_path + "/umi-ft/WBW/acp_replay_buffer_gripper.zarr"
-dataset_path = "/store/real/hjchoi92/data/real_processed/umift/zucchini-wild-test-for-coderelease/acp_replay_buffer_gripper.zarr"
-# dataset_path = "/store/real/hjchoi92/data/real/umift/zucchini-wild-b0/processed_data/all/acp_replay_buffer_gripper.zarr"
+dataset_path = "/store/real/hjchoi92/data/real_processed/umift/lightbulb-soft/acp_replay_buffer_gripper.zarr"
 
 print("Loading dataset from: ", dataset_path)
 # load the zarr dataset from the path
 # ‘r’ means read only (must exist); ‘r+’ means read/write (must exist); ‘a’ means read/write (create if doesn’t exist); ‘w’ means create (overwrite if exists); ‘w-’ means create (fail if exists).
 buffer = zarr.open(dataset_path, mode="r+")
 
-# for ep, ep_data in buffer["data"].items():
-#     print(ep)
-    
-ep = "episode_3"
+# select which episode to visualize    
+ep = "episode_4"
 print("Loading episode: ", ep)
 
 
@@ -48,21 +44,12 @@ for i in range(pose_IG.shape[0]):
     SE3_IGi = su.pose7_to_SE3(pose_IG[i])
     SE3_G0G[i] = SE3_G0I @ SE3_IGi
 
-# pose data w.r.t. global frame
-# pose_WI = np.array(buffer["data"][ep]["ts_pose_fb_0"])
-# SE3_WI = su.pose7_to_SE3(pose_WI)
 
 print("finished processing pose data")
 
 # compute net wrench
 wrench_left = np.array(buffer["data"][ep]["wrench_left_0"][..., :3])
 wrench_right = np.array(buffer["data"][ep]["wrench_right_0"][..., :3])
-# wrench_left_timestamps = np.array(buffer["data"][ep]["wrench_time_stamps_left_0"])
-# wrench_right_timestamps = np.array(buffer["data"][ep]["wrench_time_stamps_right_0"])
-# # Find closest matching timestamps
-# indices = np.searchsorted(wrench_right_timestamps, wrench_left_timestamps, side="left")
-# indices = np.clip(indices, 0, len(wrench_right_timestamps) - 1)  # Ensure indices are valid
-# wrench_right_aligned = wrench_right[indices]
 wrench_TCP = wrench_left + wrench_right
 grasp_force = (-wrench_left[:, 0] + wrench_right[:, 0]) /2
 
@@ -73,12 +60,10 @@ ultrawide = np.array(buffer["data"][ep]["ultrawide_0"])
 depth = np.array(buffer["data"][ep]["depth_0"])
 print("got images")
 data1 = np.array(SE3_G0G[..., :3, 3])
-# data1 = SE3_WI[..., :3, 3]
 print("got data1")
 data2 = np.array(buffer["data"][ep]["gripper_0"])
 print("got data2")
-# data3 = wrench_TCP
-# data3 = grasp_force
+
 print("got data3")
 data4 = np.array(buffer["data"][ep]["stiffness_0"])
 # change data4 from (N,) to (N, 1)
@@ -95,12 +80,9 @@ time_data2 = buffer["data"][ep]["gripper_time_stamps_0"]
 time_data3 = buffer["data"][ep]["wrench_time_stamps_left_0"]
 time_data4 = buffer["data"][ep]["robot_time_stamps_0"]
 
-# HC TODO: temporary local trimming for plotting. Implement data trimming in processing
 wrench_time = np.array(buffer["data"][ep]["wrench_time_stamps_left_0"])
 rgb_time = np.array(buffer["data"][ep]["rgb_time_stamps_0"])
 
-# print("wrench time: ", wrench_time)
-# print("rgb time: ", rgb_time)
 
 start_time = np.min(rgb_time)
 end_time = np.max(rgb_time)
@@ -115,14 +97,13 @@ print(mask.shape)
 data3 = wrench_TCP[mask, 0:3]
 time_data3 = wrench_time[mask]
 
-titles = ["Pose", "Gripper", "Grasp Force", "Stiffness"]
+titles = ["Pose", "Gripper Width", "Tool Center Point Force", "Stiffness"]
 
 
 print("Finished loading data")
 
 
 # Initialize figure and axes
-# fig, axes = plt.subplots(7, 1, figsize=(10, 24), gridspec_kw={'height_ratios': [3, 3, 3, 1, 1, 1, 1], 'hspace': 0.5})
 fig = plt.figure(figsize=(12, 18))
 gs = fig.add_gridspec(5, 3, height_ratios=[3, 1, 1, 1, 1], hspace=0.8, wspace=0.3)
 
@@ -142,7 +123,7 @@ ax_depth.axis("off")
 
 
 # Set plot title
-fig.suptitle(f"Plotting for {ep}")
+fig.suptitle(f"Plotting for {ep}. (Use arrowkey to toggle different timestamps)")
 
 # Plot data
 ax1.plot(time_data1, data1, '.-')
@@ -151,8 +132,6 @@ ax3.plot(time_data3, data3, '.-')
 ax4.plot(time_data4, data4, '.-')
 
 # Set titles
-# ax_rgb.set_title(titles[0])
-# ax_uw.set_title(titles[1])
 ax1.set_title(titles[0])
 ax2.set_title(titles[1])
 ax3.set_title(titles[2])
@@ -209,7 +188,6 @@ def update_image(time):
     ax_depth.axis("off")
 
     fig.canvas.draw_idle()
-
 
 
 

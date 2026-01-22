@@ -6,7 +6,7 @@ umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi iphone data are saved on your computer
-session_name="zucchini-wild-b1" # (USER TODO) change this to the session name of the raw umi iphone data
+session_name="zucchini-wild-b0" # (USER TODO) change this to the session name of the raw umi iphone data
 skip_stages="visualize" # (USER TODO) option \in {"visualize", "", "group", "gopro_timesync", "align"}. change this to "visualize" if you want to skip the visualization stage, or "" to run all stages including visualize 
 flatten_coinft_folder_structure=False # (USER TODO) option \in {True, False}. change this to "True" if this is the first time you are running this script for this session, or "False" if you already done so
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
