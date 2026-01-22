@@ -28,7 +28,7 @@ Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanfo
         - `$PORT`: This is the serial port to the microcontroller connecting the two CoinFTs.
         - `$raw_umi_data_dir`: Specifies the data path relative to `<UMIFT_REPO_ROOT>` where the multimodal data is stored.
 
-   - Start the FT recording script in `{repo}/UMIFT_Data` (the developers performed this part in macOS):
+   - Start the FT recording script in `{repo}/UMIFT_Data` (The FT data collection was tested on macOS):
      ```bash
      conda activate umift_datacollection
      bash bash/wired_collect_data.sh
@@ -95,14 +95,15 @@ Set user-specific variables such as `$raw_umi_data_dir` and `$session_name` in t
 ---
 
 ### 3. Run Postprocessing Commands
-The developers performed this part in Linux 22.04.
+The following was tested in Linux 22.04.
+Note: The following requires [umi_day package (coming soon with the iPhone app)](https://github.com/real-stanford/UMI-FT)
 #### Postprocess the iPhone Data
 ```bash
 conda activate umi_day
 bash bash/data_post_process_iphone.sh
 ```
 
-#### Postprocess All Other Data + Time Sync + Visualizatio
+#### Postprocess All Other Data + Time Sync + Visualization
 ```bash
 conda activate umift
 bash bash/data_post_process_multimodal.sh
@@ -212,6 +213,12 @@ pip install imagecodecs # Need at least 2023.9.18, which caused lots of conflict
 export PYRITE_DATASET_FOLDERS=$HOME/data/real_processed
 # Each training session will create a folder here.
 export PYRITE_CHECKPOINT_FOLDERS=$HOME/training_outputs
+
+# Change this to the actual path where you cloned UMI-FT
+export UMIFT_ROOT=$HOME/path/to/UMI-FT
+
+# For smooth execution
+export PYTHONPATH=$UMIFT_ROOT/PyriteML:$UMIFT_ROOT/PyriteML/multimodal_representation/multimodal:$UMIFT_ROOT:$PYTHONPATH
 ```
 
 ## Training the manipulation policy
