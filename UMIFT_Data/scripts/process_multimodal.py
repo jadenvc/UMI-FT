@@ -4,13 +4,9 @@ import os
 SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(SCRIPT_PATH, "../"))
 
-import argparse, copy, zarr, os, pathlib, subprocess, pickle, platform, glob
+import argparse, zarr, os, platform
 from umift.processing.wired_time_sync import fetch_campose_gripper_time_json, fetch_ft_time_cvs, trim_ft_wrt_campose, fetch_image_time, fetch_ultrawide_image_time, fetch_depth_time, get_session_name
 from umift.processing.zarr_dataset import  create_zarr_dataset_gripper_depth, slice_zarr_into_episodes_gripper_depth
-from umift.processing.wired_time_sync import time_match_ft_campose
-
-from umi_day.demonstration_processing.utils.generic_util import iterate_demonstrations
-from umi_day.common.cv_util import get_image_transform_with_border
 
 def is_headless():
     return not os.getenv("DISPLAY")  # If DISPLAY is not set, it's likely headless
@@ -107,28 +103,26 @@ def process_ft_img_campose_gripper(args):
     return aligned_data_dict, expected_H, expected_W
 
 def get_session_name(args):
-    return args.visual_data_dir.split('/')[-3] # ['', 'Users', 'chuerpan', 'Documents', 'repo', 'umiFT', 'data', 'tmp_data', '0118-home-coinft-test-3', 'processed_data', 'gopro_iphone']
+    return args.visual_data_dir.split('/')[-3] # ['', 'Users', 'chuerpan', 'Documents', 'repo', 'umiFT', 'data', 'tmp_data', '250118-home-coinft-test-3', 'processed_data', 'gopro_iphone']
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ft_data_dir', type=str, default='/Users/chuerpan/Documents/repo/umiFT/wired_collection/Python/Data/241119', help='csv file name of coinFT raw data')
-    parser.add_argument('--visual_data_dir', type=str, default='/Users/chuerpan/Documents/repo/umiFT/data/umi_day_data/coinFT_20241119_meeting_room', help='coinFT data directory')
-    parser.add_argument('--output_dir', type=str, default='/Users/chuerpan/Documents/repo/umiFT/output/coinFT_20241119_meeting_room_gripper_test', help='camera trajectory file (.csv)')
+    parser.add_argument('--ft_data_dir', type=str, help='csv file name of coinFT raw data')
+    parser.add_argument('--visual_data_dir', type=str, help='coinFT data directory')
+    parser.add_argument('--output_dir', type=str, help='camera trajectory file (.csv)')
     parser.add_argument('--output_rgb_w', type=int, default=224, help='image transform output width')
     parser.add_argument('--output_rgb_h', type=int, default=224, help='image transform output height')
-    parser.add_argument('--calibration_dir', type=str, default='/store/real/hjchoi92/repo/UMI-FT/gripper_calibration', help='Path to calibration')
-    parser.add_argument('--intermediate_umi_session_dir', type=str, default='/Users/chuerpan/Documents/repo/umiFT/intermediate_umi_output/coinft_umi_folder', help='Path to calibration')
-    parser.add_argument('--umi_submodule_dir', type=str, default='/Users/chuerpan/Documents/repo/umiFT/submodules/universal_manipulation_interface', help='Path to calibration')
-    parser.add_argument('--umi_day_submodule_dir', type=str, default='/Users/chuerpan/Documents/repo/umiFT/submodules/umi_day', help='Path to calibration')
+    parser.add_argument('--calibration_dir', type=str, help='Path to calibration')
+    parser.add_argument('--intermediate_umi_session_dir', type=str, help='Path to calibration')
+    parser.add_argument('--umi_submodule_dir', type=str, help='Path to calibration')
+    parser.add_argument('--umi_day_submodule_dir', type=str, help='Path to calibration')
     parser.add_argument('--plot', action='store_true', help='plot the time sequences')
-    parser.add_argument('--gripper_side', type=str, default='left', help='print debug info') 
+    parser.add_argument('--gripper_side', type=str, help='print debug info') 
     parser.add_argument('--plot_horizontal', action='store_true', help='plot the time sequences horizontally')
     args = parser.parse_args()
     
-    ### process ft, image, campose data, and create time-aligned zarr dataset with data + timestamps
+    # process ft, image, campose data, and create time-aligned zarr dataset with data + timestamps
     pose_gripper_img_ft_dict, expected_H, expected_W = process_ft_img_campose_gripper(args)
-
-
     zarr_output_path = os.path.join(args.output_dir, 'replay_buffer_gripper.zarr')
     print(f'Creating zarr dataset, to: {zarr_output_path}')
     buffer = create_zarr_dataset_gripper_depth(pose_gripper_img_ft_dict, zarr_output_path, cam_id=0, gripper_id=0, expected_H=expected_H, expected_W=expected_W)

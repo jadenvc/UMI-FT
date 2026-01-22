@@ -1,11 +1,10 @@
-# 🍎 UMI-FT 🍎
+# 🍎 UMI-FT Data 🍎 
 
 ## Setup ⚙️
 ```bash
 cd <path/to/umiFT>
 pip install -e .
 ```
-
 ---
 
 ## 🍇 Data Collection Instructions
@@ -22,8 +21,6 @@ pip install -e .
    - A browser pop-up will display a QR code for time sync. 
    - Sync the GoPro with the checker on, after seeing the check on gopro, turn the checker off.
    - Mount the gopro on the robot, then select [time] on the iphone to start record a timesync video on iphone.  
-
-     Refer to the [Notion Instructions](https://www.notion.so/Data-collection-pipeline-with-iPhone-ARKit-128892d6672580589667e319629f798a) for details.
 
 3. **Record Gripper Calibration Video**
     - select [gripper] on the iphone to start record the gripper calibration video (open and closing the gripper for > 5 times) 

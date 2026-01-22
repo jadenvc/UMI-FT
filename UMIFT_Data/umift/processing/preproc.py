@@ -1,4 +1,5 @@
 import numpy as np
+
 def gripper_width_determin_optimal_alignment(demo_video_meta_df, start_timestamp):
     # determine optimal alignment
     dt = None

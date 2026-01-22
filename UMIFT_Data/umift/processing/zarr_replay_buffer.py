@@ -1,3 +1,5 @@
+# Zarr Utilities 
+
 from typing import Union, Dict, Optional
 import os
 import math

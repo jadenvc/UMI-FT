@@ -1,25 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Cursor
-
-import sys
-import os
-from typing import Dict, Callable, Tuple, List
+import sys, os, zarr
+from PyriteUtility.spatial_math import spatial_utilities as su
 
 SCRIPT_PATH = "/local/real/hjchoi92/repo/UMI-FT/scripts"
 sys.path.append(os.path.join(SCRIPT_PATH, '../'))
 sys.path.append(os.path.join(SCRIPT_PATH, '../../PyriteUtility'))
 
-from PyriteUtility.spatial_math import spatial_utilities as su
-
-
-import numpy as np
-import zarr
-
 if "PYRITE_DATASET_FOLDERS" not in os.environ:
     raise ValueError("Please set the environment variable PYRITE_DATASET_FOLDERS")
-dataset_folder_path = os.environ.get("PYRITE_DATASET_FOLDERS")
 
+dataset_folder_path = os.environ.get("PYRITE_DATASET_FOLDERS")
 dataset_path = "/store/real/hjchoi92/data/real_processed/umift/lightbulb-soft/acp_replay_buffer_gripper.zarr"
 
 print("Loading dataset from: ", dataset_path)
@@ -30,8 +21,6 @@ buffer = zarr.open(dataset_path, mode="r+")
 # select which episode to visualize    
 ep = "episode_4"
 print("Loading episode: ", ep)
-
-
 print(buffer.tree())
 
 # preprocess pose data into relative pose
@@ -98,8 +87,6 @@ data3 = wrench_TCP[mask, 0:3]
 time_data3 = wrench_time[mask]
 
 titles = ["Pose", "Gripper Width", "Tool Center Point Force", "Stiffness"]
-
-
 print("Finished loading data")
 
 

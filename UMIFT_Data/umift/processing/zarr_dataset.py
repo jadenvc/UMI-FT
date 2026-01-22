@@ -1,16 +1,14 @@
-from umift.processing.zarr_replay_buffer import ReplayBuffer
-from umift.processing.imagecodecs_numcodecs import JpegXl
+# Zarr Dataset  
+
 from numcodecs import Blosc, VLenUTF8
 import numpy as np
-import os
 import zarr 
-from umift.utils.print_utils import debug_print, info_print
-from umift.utils.time_utils import array_isostringformat_to_timestamp
 from scipy.spatial.transform import Rotation
+from umift.utils.time_utils import array_isostringformat_to_timestamp
+from umift.processing.imagecodecs_numcodecs import JpegXl
 from umift.utils.rotation_utils import adjoint, wrench2fm, fm2wrench, transform_coinft_l2tcp, transform_coinft_r2cp
 from umift.processing.imagecodecs_numcodecs import register_codecs
 register_codecs()
-
 
 def slice_zarr_into_episodes(input_zarr_path, output_zarr_path):
     """
@@ -407,8 +405,6 @@ def create_zarr_dataset(data_dict, output_path, cam_id=0, gripper_id=0, expected
         ft_length_right = len(ft_data_right['ftData'])
         
         assert ft_length_left == ft_length_right, f'ft_length_left: {ft_length_left}, ft_length_right: {ft_length_right}'
-         
-        
         cam_length = len(image_data['imgData'])
         
         # Fill camera, campera pose, force/torque data

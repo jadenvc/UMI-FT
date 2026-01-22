@@ -1,4 +1,6 @@
-# time format conversion
+# Time format conversion
+# Author: Chuer Pan
+
 from datetime import datetime, timezone, timedelta
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,7 +8,6 @@ import os, av
 from typing import Union
 from fractions import Fraction
  
-
 def array_convert_timestamp_to_iso(timestamp_array):
     """
     Converts an array of ISO 8601 strings to an array of float timestamps.
@@ -23,7 +24,6 @@ def array_convert_timestamp_to_iso(timestamp_array):
     ]
 
 # Assumption: right now, all time is preserved up to microseconds (6 decimal places) precision, if need more precision, look into float -> Decimal conversion
-
 def convert_timestamp_to_iso_processed(timestamp):
     """
     ouptut format is the same as in processed_{}.csv
@@ -188,8 +188,8 @@ def timecode_to_seconds(
     """
     Convert non-skip frame timecode into seconds since midnight
     """
-    # calculate whole frame rate
-    # 29.97 -> 30, 59.94 -> 60
+    # calculate whole frame rate, rounded up to the nearest integer
+    # Eg. 29.97 -> 30, 59.94 -> 60
     int_frame_rate = round(frame_rate)
 
     # parse timecode string

@@ -6,8 +6,6 @@ from umift.processing.imagecodecs_numcodecs import JpegXl
 from umift.processing.imagecodecs_numcodecs import register_codecs
 register_codecs()
 
-
-
 task_to_perform = 'merge_zarr'
 # task_to_perform = 'remove_episode'
 # task_to_perform = 'keep_only'
@@ -215,8 +213,6 @@ def keep_only_episodes(zarr_path, episodes_to_keep):
     reindex_episodes(zarr_path)
 
     print(f"[Success] Now only {len(episodes_to_keep)} episodes remain in {zarr_path}")
-
-
 
 
 if __name__ == "__main__":

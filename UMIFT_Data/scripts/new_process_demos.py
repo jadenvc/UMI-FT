@@ -1,27 +1,17 @@
+import tqdm, yaml, os, re, cv2, math, shutil, json
 from argparse import ArgumentParser
-import json
-import os
-import shutil
 from datetime import datetime, timedelta, timezone
 from umi_day.common.timecode_util import mp4_get_start_datetime
 from av.error import InvalidDataError
-import cv2
 from umi_day.common.trajectory_util import sample_poses_at_times, plot_video_aligned_trajectory, save_trajectory_umi_format
 from umi_day.common.transform_util import pose_4x4_to_quat_xyzw, pos_quat_xyzw_to_4x4
 from umi_day.common.generic_util import symlink_absolute
 import numpy as np
-import math
-from collections import OrderedDict
 import pandas as pd
 from glob import glob
-import re
-import os
-import tqdm
 from statistics import stdev
-import yaml
 from colorama import init, Fore, Back, Style
 init()
-
 
 MIN_FRAME_COUNT = 60
 

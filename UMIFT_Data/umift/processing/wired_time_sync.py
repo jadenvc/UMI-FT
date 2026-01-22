@@ -1,7 +1,7 @@
+# Wired Time Sync Utilities
 import numpy as np
 import pandas as pd
 import concurrent.futures
-
 from umift.utils.time_utils import convert_timestamp_to_iso_processed, isostringformat_to_timestamp, array_isostringformat_to_timestamp, array_ntp_time_to_timestamp, convert_timestamp_to_iso_z_format
 from umift.utils.print_utils import color_print, debug_print, info_print
 from umift.utils.json_utils import save_ft_data, load_visual_data_json, get_demonstration_dirs, save_campose_data, save_json

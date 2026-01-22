@@ -5,8 +5,8 @@ INSTALL_REQUIRES = []
 setup(
     name="umift",
     author="Chuer Pan and Hojung Choi",
-    version="0.0.0",
-    description="UMI Force Torque",
+    version="0.1.0",
+    description="UMI FT",
     long_description=open('README.md').read(),
     keywords=[],
     include_package_data=True,

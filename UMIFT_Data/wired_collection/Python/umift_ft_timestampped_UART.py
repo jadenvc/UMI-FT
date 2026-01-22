@@ -19,10 +19,8 @@ import time
 import struct
 import numpy as np
 import os
-import scipy.io
 import datetime
 import matplotlib.pyplot as plt
-import sys
 import ntplib
 import onnxruntime as ort
 import copy

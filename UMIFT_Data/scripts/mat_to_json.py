@@ -1,4 +1,4 @@
-import scipy.io as sio, json, numpy as np, sys, pathlib
+import scipy.io as sio, json, numpy as np
 
 sensor_name = 'NFT5'
 mat = sio.loadmat(sensor_name+'_norm_constants.mat')['norm_const'].ravel()[0]

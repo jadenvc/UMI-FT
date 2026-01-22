@@ -3,7 +3,7 @@ Official code base for UMI-FT.
 
 
 # Data collection
-UMI-FT lets you collect forceful manipulation data without a robot.
+UMI-FT lets you collect forceful manipulation data *without* a robot.
 Please refer to [UMI-FT Hardware Instructions]([https://github.com/real-stanford/UMI-FT](https://docs.google.com/document/d/e/2PACX-1vRrfSfjj3ct5u4bdyJYX92zH3QwZahU1D0nfb9wjb6GqDXqEZYVsaxwcCh1gwJgjRlq1fbgLJECGoPf/pub)) for building UMI-FT.
 
 Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanford/UMI-FT) for installing the data collection app on the iPhone.
@@ -11,17 +11,17 @@ Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanfo
 
 1. Install [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) and the UMIF_Data package.
    ```bash
-     pip install -e .
+    pip install -e .
    ```
 
-3. **Rename the session name on the iPhone app**  
+2. **Rename the session name on the iPhone app**  
    Set a name for the session:  
    `zucchini-skewering`  
 
-4. **Record Gripper Calibration Video**
+3. **Record Gripper Calibration Video**
     - select [gripper] on the iphone to start record the gripper calibration video (open and close the gripper for > 10 times) 
 
-5. **Record Demos**
+4. **Record Demos**
     - Set script constants for coinft data collection
         Set user-specific variables such as `$raw_umi_data_dir`, `$session_name`, `$PORT` and `$time`in the script, `bash/wired_collect_data.sh`
         - `$time`: the duration in seconds for the data collection, make sure to be longer than demo. The data collection should start earlier than the demo (iPhone), and end later than the demo (iPhone).
@@ -41,7 +41,7 @@ Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanfo
    - Stop the iPhone recording after the demo is complete.
    - Wait for CoinFT data collection to finish.
 
-6. **Export Demos from SD Card**  
+5. **Export Demos from SD Card**  
    Save the data to the following folder: 
      `<SD_CARD_DIR>/UMI_iPhone/export_<SESSION_TIME>` → `<UMIFT_REPO_ROOT>/UMIFT_Data/data/umift_data/<session_name>/UMI_iPhone`
 
@@ -100,6 +100,7 @@ Set user-specific variables such as `$raw_umi_data_dir` and `$session_name` in t
 ### 3. Run Postprocessing Commands
 The following was tested in Linux 22.04.
 Note: The following requires [umi_day package (coming soon with the iPhone app)](https://github.com/real-stanford/UMI-FT)
+
 #### Postprocess the iPhone Data
 ```bash
 conda activate umi_day
@@ -254,7 +255,7 @@ data.tree()
 
 Wrench data order assumption: [Fx, Fy, Fz, Mx, My, Mz]
 
-Wrench body frame and world frame transformation reference from [Modern Robotics, Lynch & Park](https://hades.mech.northwestern.edu/images/7/7f/MR.pdf#page=126.68) 
+Wrench body frame and world frame transformation in accordance with convention from [Modern Robotics, Lynch & Park](https://hades.mech.northwestern.edu/images/7/7f/MR.pdf#page=126.68) 
 
 ### 7. Data Visualization
 Run `{repo_root}/UMIFT_Data/scripts/plot_dataset_umift_ultrawide_depth.py` with the proper dataset path.
@@ -290,7 +291,7 @@ First we need to install hardware control softwares. They are written in c++ and
 
 Before building the packages, make sure the conda packages we installed before are visible to c++ linkers. You can do so by creating a .sh file with the following content:
 ``` sh
-export LD_LIBRARY_PATH=/home/yifanhou/miniforge3/envs/pyrite/lib/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/miniforge3/envs/pyrite/lib/:$LD_LIBRARY_PATH
 ```
 at `${CONDA_PREFIX}/etc/conda/activate.d/`, e.g. `$HOME/miniforge3/envs/pyrite/etc/conda/activate.d` if you install miniforge at the default location.
 

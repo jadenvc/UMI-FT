@@ -1,9 +1,8 @@
-import json
-import numpy as np
-import os
-from pathlib import Path
-import glob
+# JSON utilities
 
+import json, os
+import numpy as np
+from pathlib import Path
 from umift.utils.print_utils import color_print, info_print
 
 class NumpyEncoder(json.JSONEncoder):

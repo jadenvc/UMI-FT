@@ -1,5 +1,6 @@
+# Read FT data Utilities
+
 import os 
-import numpy as np
 import pandas as pd
 
 def read_and_save_force_torque_data(input_file_path, output_file_path=None):
