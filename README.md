@@ -265,6 +265,8 @@ Run `{repo_root}/UMIFT_Data/scripts/plot_dataset_umift_ultrawide_depth.py` with 
 ## Training the manipulation policy
 Our policy is an extended version of Adaptive Compliance Policy, which is built on top of Diffusion Policy.
 
+Properly set path to dataset and task specific parameters in `PyriteML/diffusion_policy/config/train_umift_workspace.yaml`. Other than the dataset path, most of the parameters can stay the same.
+
 Before launching training, setup accelerator if you haven't done so:
 ``` sh
 accelerate config
@@ -330,10 +332,27 @@ For UR robot, please update the following fields in [the config](https://github.
 
 If you use a different robot, please update hardware_interfaces accordingly.
 
+
 ## Setup CoinFT
 Indicate the location of calibration files in the hardware config. [Here is an example](https://github.com/yifan-hou/hardware_interfaces/blob/main/workcell/table_top_manip/config/right_arm_coinft.yaml#L77-L80).
 
-You also need to setup onnxruntime to "/opt/onnxruntime" (TODO:Hojung)
+### Install C++ Dependencies
+
+**1. ONNX Runtime**
+The CoinFT driver expects the ONNX Runtime C++ library to be located at `/opt/onnxruntime`.
+Run the following commands to download and set it up:
+
+```bash
+# 1. Download ONNX Runtime (v1.16.3 is recommended)
+wget [https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-1.16.3.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-1.16.3.tgz)
+
+# 2. Extract the file
+tar -xvzf onnxruntime-linux-x64-1.16.3.tgz
+
+# 3. Move it to the required location (Requires sudo)
+sudo mv onnxruntime-linux-x64-1.16.3 /opt/onnxruntime
+
+
 
 ## Setup WSG gripper
 After the WSG gripper is powered on and connected (you may need to manually set your local network config to the same subnet, if you cannot ping the gripper), access the web interface by typing the gripper ip in a browser.
