@@ -72,7 +72,7 @@ stiffness_estimation_para = {
     "k_min": 200,  # 1cm 2.5N
     "f_low": 2.0,  # 0.5,
     # "f_low": 1.5,
-    "f_high": 7,  # 5,
+    "f_high": 8,  # 5,
     "dim": 3,
     "characteristic_length": 0.02,
     "vel_tol": 999.002,  # vel larger than this will trigger stiffness adjustment
