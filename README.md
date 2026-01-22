@@ -8,19 +8,20 @@ Please refer to [UMI-FT Hardware Instructions]([https://github.com/real-stanford
 
 Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanford/UMI-FT) for installing the data collection app on the iPhone.
 
-1. Install the UMIF_Data package.
+
+1. Install [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) and the UMIF_Data package.
    ```bash
      pip install -e .
    ```
 
-2. **Rename the session name on the iPhone app**  
+3. **Rename the session name on the iPhone app**  
    Set a name for the session:  
    `zucchini-skewering`  
 
-3. **Record Gripper Calibration Video**
+4. **Record Gripper Calibration Video**
     - select [gripper] on the iphone to start record the gripper calibration video (open and close the gripper for > 10 times) 
 
-4. **Record Demos**
+5. **Record Demos**
     - Set script constants for coinft data collection
         Set user-specific variables such as `$raw_umi_data_dir`, `$session_name`, `$PORT` and `$time`in the script, `bash/wired_collect_data.sh`
         - `$time`: the duration in seconds for the data collection, make sure to be longer than demo. The data collection should start earlier than the demo (iPhone), and end later than the demo (iPhone).
@@ -40,7 +41,7 @@ Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanfo
    - Stop the iPhone recording after the demo is complete.
    - Wait for CoinFT data collection to finish.
 
-5. **Export Demos from SD Card**  
+6. **Export Demos from SD Card**  
    Save the data to the following folder: 
      `<SD_CARD_DIR>/UMI_iPhone/export_<SESSION_TIME>` → `<UMIFT_REPO_ROOT>/UMIFT_Data/data/umift_data/<session_name>/UMI_iPhone`
 
@@ -65,6 +66,8 @@ Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanfo
 
 
 ## 🔬 Data Postprocessing Instructions 
+
+Follow the instructions below in `{repo_root}/UMIFT_Data`.
 
 ### 1. Set Constants in Postprocessing Scripts
 Set user-specific variables such as `$raw_umi_data_dir` and `$session_name` in the following scripts for your collected data session:
@@ -109,7 +112,78 @@ conda activate umift
 bash bash/data_post_process_multimodal.sh
 ```
 
-### 4. Output Zarr Data Format 📦
+
+### 4. Merge Data
+Using `scripts/zarr_utils.py`, merge any relevant demonstration sessions into one by properly setting `input_zarrs` and `output_zarr`. This step is recommended even whwen there is only one session.
+
+### 5. Postprocessing for Adaptive Compliance Policy
+Move to `{repo_root}`.
+
+#### Setup for Adaptive Compliance Policy
+The following is tested with Python 3.12 on Ubuntu 22.04 and 24.04.
+
+1. Create a virtual env called `pyrite`:
+``` sh
+mamba create -n pyrite python=3.12
+mamba activate pyrite
+# We recommend to install bulky packages first
+# Install a version of pytorch that works with your cuda version: https://pytorch.org/get-started/locally/ 
+pip3 install torch torchvision torchaudio
+pip3 install timm diffusers accelerate
+# Pickup remaining packages in the env yaml
+mamba env update --name pyrite --file PyriteML/conda_environment.yaml
+# A few pip installs
+pip install v4l2py
+pip install toppra
+pip install atomics
+pip install vit-pytorch # Need at least 1.7.12, which was not available in conda
+pip install imagecodecs # Need at least 2023.9.18, which caused lots of conflicts in conda
+```
+
+2. Setup environment variables: add the following to your .bashrc or .zshrc, edit according to your local path.
+``` sh
+# where the processed zarr dataset files are
+export PYRITE_DATASET_FOLDERS=$HOME/data/real_processed
+# Each training session will create a folder here.
+export PYRITE_CHECKPOINT_FOLDERS=$HOME/training_outputs
+
+# Change this to the actual path where you cloned UMI-FT
+export UMIFT_ROOT=$HOME/path/to/UMI-FT
+
+# For smooth execution
+export PYTHONPATH=$UMIFT_ROOT/PyriteML:$UMIFT_ROOT/PyriteML/multimodal_representation/multimodal:$UMIFT_ROOT:$PYTHONPATH
+```
+#### Adding Compliance Labels
+
+The postprocessing script is `{repo_root}/PyriteUtility/PyriteUtility/data_pipeline/postprocessing_add_virtual_target_label_umift.py`.
+
+##### Generate labels
+To do postprocessing (generates virtual targets/stiffness labels): edit the following in the script before running it:
+``` py
+# Config for umift (single robot)
+dataset_path = "{one_level_above_the_path_to_your_merged_data}/acp_replay_buffer_gripper.zarr/"
+id_list = [0] # for bimanual, it should be [0, 1]
+
+num_of_process = 5 # parallelization uses a lot of memory, don't make this number too big. Stable when set to 1.
+flag_plot = False
+```
+The other parameters can stay the same.
+After this is done, the dataset should be ready for training.
+
+> Note: The script also offset the timestamps in the data by finding the smallest time among all timestamps, then subtract it from all timestamps.
+
+##### Visualize data
+To plot the reference trajectory and generated virtual target trajectory, set the following:
+
+``` sh
+num_of_process = 1
+flag_plot = True
+fin_every_n = 5  # plot a line from ref to vt point every xx points. 5 is good for umift.
+```
+
+
+
+### 6. Output Zarr Data Format 📦
 
 Example zarr data tree for 200 demos:
 ```
@@ -184,42 +258,6 @@ Wrench body frame and world frame transformation reference from [Modern Robotics
 
 
 # Policy Training
-
-## Install
-The following is tested with Python 3.12 on Ubuntu 22.04 and 24.04.
-
-1. Install [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
-2. Create a virtual env called `pyrite`:
-``` sh
-mamba create -n pyrite python=3.12
-mamba activate pyrite
-# We recommend to install bulky packages first
-# Install a version of pytorch that works with your cuda version: https://pytorch.org/get-started/locally/ 
-pip3 install torch torchvision torchaudio
-pip3 install timm diffusers accelerate
-# Pickup remaining packages in the env yaml
-mamba env update --name pyrite --file PyriteML/conda_environment.yaml
-# A few pip installs
-pip install v4l2py
-pip install toppra
-pip install atomics
-pip install vit-pytorch # Need at least 1.7.12, which was not available in conda
-pip install imagecodecs # Need at least 2023.9.18, which caused lots of conflicts in conda
-```
-
-3. Setup environment variables: add the following to your .bashrc or .zshrc, edit according to your local path.
-``` sh
-# where the processed zarr dataset files are
-export PYRITE_DATASET_FOLDERS=$HOME/data/real_processed
-# Each training session will create a folder here.
-export PYRITE_CHECKPOINT_FOLDERS=$HOME/training_outputs
-
-# Change this to the actual path where you cloned UMI-FT
-export UMIFT_ROOT=$HOME/path/to/UMI-FT
-
-# For smooth execution
-export PYTHONPATH=$UMIFT_ROOT/PyriteML:$UMIFT_ROOT/PyriteML/multimodal_representation/multimodal:$UMIFT_ROOT:$PYTHONPATH
-```
 
 ## Training the manipulation policy
 Our policy is an extended version of Adaptive Compliance Policy, which is built on top of Diffusion Policy.
