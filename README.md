@@ -4,52 +4,45 @@ Official code base for UMI-FT.
 
 # Data collection
 UMI-FT lets you collect forceful manipulation data without a robot.
-Please refer to [TBD](https://github.com/real-stanford/UMI-FT) for instructions on building UMI-FT.
+Please refer to [UMI-FT Hardware Instructions]([https://github.com/real-stanford/UMI-FT](https://docs.google.com/document/d/e/2PACX-1vRrfSfjj3ct5u4bdyJYX92zH3QwZahU1D0nfb9wjb6GqDXqEZYVsaxwcCh1gwJgjRlq1fbgLJECGoPf/pub)) for building UMI-FT.
 
+Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanford/UMI-FT) for installing the data collection app on the iPhone.
 
-1. **Rename the session name on the iPhone app**  
-   Use the naming convention:  
-   `task-YYMMDD-location-demonstrator-<other-info>`  
+1. Install the UMIF_Data package.
+   ```bash
+     pip install -e .
+   ```
 
-2. **Time Sync** ⌛
-   - Open the time sync page:
-     ```bash
-     open wired_collection/iphone_gopro_timesync/index.html
-     ```
-   - A browser pop-up will display a QR code for time sync. 
-   - Sync the GoPro with the checker on, after seeing the check on gopro, turn the checker off.
-   - Mount the gopro on the robot, then select [time] on the iphone to start record a timesync video on iphone.  
-
-     Refer to the [Notion Instructions](https://www.notion.so/Data-collection-pipeline-with-iPhone-ARKit-128892d6672580589667e319629f798a) for details.
+2. **Rename the session name on the iPhone app**  
+   Set a name for the session:  
+   `zucchini-skewering`  
 
 3. **Record Gripper Calibration Video**
-    - select [gripper] on the iphone to start record the gripper calibration video (open and closing the gripper for > 5 times) 
+    - select [gripper] on the iphone to start record the gripper calibration video (open and close the gripper for > 10 times) 
 
 4. **Record Demos**
     - Set script constants for coinft data collection
-        Set the `$raw_umi_data_dir`, `$session_name` and `$time`in the script, `bash/wired_collect_data.sh`
-        - `$time`: the duration in seconds for the data collection, make sure to be longer than demo.
+        Set user-specific variables such as `$raw_umi_data_dir`, `$session_name`, `$PORT` and `$time`in the script, `bash/wired_collect_data.sh`
+        - `$time`: the duration in seconds for the data collection, make sure to be longer than demo. The data collection should start earlier than the demo (iPhone), and end later than the demo (iPhone).
         - `$session_name`: Should match the session name set on the UMI_day app.
+        - `$PORT`: This is the serial port to the microcontroller connecting the two CoinFTs.
         - `$raw_umi_data_dir`: Specifies the data path relative to `<UMIFT_REPO_ROOT>` where the multimodal data is stored.
 
-   - Start the FT recording script:
+   - Start the FT recording script in `{repo}/UMIFT_Data` (the developers performed this part in macOS):
      ```bash
-     conda activate wired_coinft_i2c
+     conda activate umift_datacollection
      bash bash/wired_collect_data.sh
      ```
      - The FT data will be saved to:  
-        `<UMIFT_REPO_ROOT>/data/umift_data/<session_name>/coinft`
+        `<UMIFT_REPO_ROOT>/UMIFT_Data/data/umift_data/<session_name>/coinft`
 
-   - Record GoPro demos using the "Start Recording" button on the UMI_day iPhone app. 🎥
-   - Stop the GoPro recording after the demo is complete.
-   - Wait for coinFT data collection to finish.
+   - Record demos using the "Start Recording" button on the UMI_day iPhone app. 🎥
+   - Stop the iPhone recording after the demo is complete.
+   - Wait for CoinFT data collection to finish.
 
 5. **Export Demos from SD Card**  
-   Save the data to the following folders:
-   - **GoPro Demos**:  
-     `<SD_CARD_DIR>/DCIM/100GOPRO` → `<UMIFT_REPO_ROOT>/data/umift_data/<session_name>/DCIM/100GOPRO`
-   - **ARKit Demos**:  
-     `<SD_CARD_DIR>/UMI_iPhone/export_<SESSION_TIME>` → `<UMIFT_REPO_ROOT>/data/umift_data/<session_name>/UMI_iPhone`
+   Save the data to the following folder: 
+     `<SD_CARD_DIR>/UMI_iPhone/export_<SESSION_TIME>` → `<UMIFT_REPO_ROOT>/UMIFT_Data/data/umift_data/<session_name>/UMI_iPhone`
 
 ### Recommended Folder Structure
 ```
@@ -59,10 +52,6 @@ Please refer to [TBD](https://github.com/real-stanford/UMI-FT) for instructions 
 │   │   ├── export_<YYYY-MM-DD_TIME>/
 │   │   │   ├── <TIME>_<side>.json
 │   │   │   ├── ...
-│   ├── DCIM/
-│   │   ├── 100GOPRO/
-│   │   │   ├── <GOPRO_FILE>.MP4
-│   │   │   ├──  ...
 │   ├── coinft/
 │   │   ├── YYYY-MM-DD/
 │   │   │   ├── <COINFT_FILE>_LF.csv
@@ -78,25 +67,21 @@ Please refer to [TBD](https://github.com/real-stanford/UMI-FT) for instructions 
 ## 🔬 Data Postprocessing Instructions 
 
 ### 1. Set Constants in Postprocessing Scripts
-Set the `$raw_umi_data_dir` and `$session_name` in the following scripts for your collected data session:
+Set user-specific variables such as `$raw_umi_data_dir` and `$session_name` in the following scripts for your collected data session:
     - `bash/data_post_process_gopro_iphone.sh`
     - `bash/data_post_process_multimodal.sh`
 
-- `$session_name`: Should match the session name set on the UMI_day app.
+- `$session_name`: Should match the session name set on the iPhone app.
 - `$raw_umi_data_dir`: Specifies the data path relative to `<UMIFT_REPO_ROOT>` where the multimodal data is stored.
 
 ### 2. Folder Assumptions 📁
 ```
-<raw_umi_data_dir>/ (:=<UMIFT_REPO_ROOT>/data/umift_data)
+<raw_umi_data_dir>/ (:=<UMIFT_REPO_ROOT>/UMIFT_Data/data/umift_data)
 ├── <session_name>/
 │   ├── UMI_iphone/
 │   │   ├── export_<YYYY-MM-DD_TIME>/
 │   │   │   ├── <TIME>_<side>.json
 │   │   │   ├── ...
-│   ├── DCIM/
-│   │   ├── 100GOPRO/
-│   │   │   ├── <GOPRO_FILE>.MP4
-│   │   │   ├──  ...
 │   ├── coinft/
 │   │   ├── YYYY-MM-DD/
 │   │   │   ├── <COINFT_FILE>_LF.csv
@@ -110,14 +95,14 @@ Set the `$raw_umi_data_dir` and `$session_name` in the following scripts for you
 ---
 
 ### 3. Run Postprocessing Commands
-
-#### Postprocess the GoPro + iPhone Data
+The developers performed this part in Linux 22.04.
+#### Postprocess the iPhone Data
 ```bash
 conda activate umi_day
-bash bash/data_post_process_gopro_iphone.sh
+bash bash/data_post_process_iphone.sh
 ```
 
-#### Postprocess All Other Data + Time Sync + Visualization
+#### Postprocess All Other Data + Time Sync + Visualizatio
 ```bash
 conda activate umift
 bash bash/data_post_process_multimodal.sh
@@ -125,46 +110,71 @@ bash bash/data_post_process_multimodal.sh
 
 ### 4. Output Zarr Data Format 📦
 
-Example zarr data tree for two demos:
+Example zarr data tree for 200 demos:
 ```
 data.tree()
 /
  ├── data
- │   ├── episode_0
- │   │   ├── gripper_0 (580, 1) float64
- │   │   ├── gripper_time_stamps_0 (580, 1) float64
- │   │   ├── rgb_0 (580, 202, 270, 3) uint8
- │   │   ├── rgb_time_stamps_0 (580, 1) float64
- │   │   ├── robot_time_stamps_0 (580, 1) float64
- │   │   ├── ts_pose_fb_0 (580, 7) float64
- │   │   ├── wrench_concat_0 (3600, 12) float64
- │   │   ├── wrench_concat_coinft_0 (3600, 12) float64
- │   │   ├── wrench_left_0 (3600, 6) float64
- │   │   ├── wrench_left_coinft_0 (3600, 6) float64
- │   │   ├── wrench_right_0 (3600, 6) float64
- │   │   ├── wrench_right_coinft_0 (3600, 6) float64
- │   │   ├── wrench_time_stamps_left_0 (3600, 1) float64
- │   │   └── wrench_time_stamps_right_0 (3600, 1) float64
- │   └── episode_1
- │       ├── gripper_0 (903, 1) float64
- │       ├── gripper_time_stamps_0 (903, 1) float64
- │       ├── rgb_0 (903, 202, 270, 3) uint8
- │       ├── rgb_time_stamps_0 (903, 1) float64
- │       ├── robot_time_stamps_0 (903, 1) float64
- │       ├── ts_pose_fb_0 (903, 7) float64
- │       ├── wrench_concat_0 (5404, 12) float64
- │       ├── wrench_concat_coinft_0 (5404, 12) float64
- │       ├── wrench_left_0 (5404, 6) float64
- │       ├── wrench_left_coinft_0 (5404, 6) float64
- │       ├── wrench_right_0 (5404, 6) float64
- │       ├── wrench_right_coinft_0 (5404, 6) float64
- │       ├── wrench_time_stamps_left_0 (5404, 1) float64
- │       └── wrench_time_stamps_right_0 (5404, 1) float64
+ .....
+ │   ├── episode_95                                                                                                          
+ │   │   ├── depth_0 (158, 224, 224, 3) float16                                                                              
+ │   │   ├── depth_time_stamps_0 (158, 1) float64                                                                            
+ │   │   ├── gripper_0 (315, 1) float64                                                                                      
+ │   │   ├── gripper_time_stamps_0 (315, 1) float64                                                                          
+ │   │   ├── map_to_d_idx_0 (315, 1) int64                                                                                   
+ │   │   ├── map_to_uw_idx_0 (315, 1) int64                                                                                  
+ │   │   ├── rgb_0 (315, 224, 224, 3) uint8                                                                                  
+ │   │   ├── rgb_time_stamps_0 (315, 1) float64                                                                              
+ │   │   ├── robot_time_stamps_0 (315, 1) float64                                                                            
+ │   │   ├── stiffness_0 (315,) float64                                                                                      
+ │   │   ├── ts_pose_command_0 (315, 7) float64                                                                              
+ │   │   ├── ts_pose_fb_0 (315, 7) float64                                                                                   
+ │   │   ├── ts_pose_virtual_target_0 (315, 7) float64                                                                       
+ │   │   ├── ultrawide_0 (53, 224, 224, 3) uint8                                                                             
+ │   │   ├── ultrawide_time_stamps_0 (53, 1) float64                                                                         
+ │   │   ├── wrench_concat_0 (7922, 12) float64                                                                              
+ │   │   ├── wrench_concat_coinft_0 (7922, 12) float64                                                                       
+ │   │   ├── wrench_left_0 (7922, 6) float64                                                                                 
+ │   │   ├── wrench_left_coinft_0 (7922, 6) float64                                                                          
+ │   │   ├── wrench_right_0 (7922, 6) float64                                                                                
+ │   │   ├── wrench_right_coinft_0 (7922, 6) float64                                                                         
+ │   │   ├── wrench_time_stamps_0 (7922, 1) float64                                                                          
+ │   │   ├── wrench_time_stamps_left_0 (7922, 1) float64                                                                     
+ │   │   └── wrench_time_stamps_right_0 (7922, 1) float64
+ │   ├── episode_96                                                                                                          
+ │   │   ├── depth_0 (163, 224, 224, 3) float16                                                                              
+ │   │   ├── depth_time_stamps_0 (163, 1) float64                                                                            
+ │   │   ├── gripper_0 (326, 1) float64                                                                                      
+ │   │   ├── gripper_time_stamps_0 (326, 1) float64                                                                          
+ │   │   ├── map_to_d_idx_0 (326, 1) int64                                                                                   
+ │   │   ├── map_to_uw_idx_0 (326, 1) int64                                                                                  
+ │   │   ├── rgb_0 (326, 224, 224, 3) uint8                                                                                  
+ │   │   ├── rgb_time_stamps_0 (326, 1) float64                                                                              
+ │   │   ├── robot_time_stamps_0 (326, 1) float64                                                                            
+ │   │   ├── stiffness_0 (326,) float64                                                                                      
+ │   │   ├── ts_pose_command_0 (326, 7) float64                                                                              
+ │   │   ├── ts_pose_fb_0 (326, 7) float64                                                                                   
+ │   │   ├── ts_pose_virtual_target_0 (326, 7) float64                                                                       
+ │   │   ├── ultrawide_0 (55, 224, 224, 3) uint8                                                                             
+ │   │   ├── ultrawide_time_stamps_0 (55, 1) float64                                                                         
+ │   │   ├── wrench_concat_0 (7924, 12) float64                                                                              
+ │   │   ├── wrench_concat_coinft_0 (7924, 12) float64                                                                       
+ │   │   ├── wrench_left_0 (7924, 6) float64                                                                                 
+ │   │   ├── wrench_left_coinft_0 (7924, 6) float64                                                                          
+ │   │   ├── wrench_right_0 (7924, 6) float64                                                                                
+ │   │   ├── wrench_right_coinft_0 (7924, 6) float64                                                                         
+ │   │   ├── wrench_time_stamps_0 (7924, 1) float64                                                                          
+ │   │   ├── wrench_time_stamps_left_0 (7924, 1) float64                                                                     
+ │   │   └── wrench_time_stamps_right_0 (7924, 1) float64
+ .....
  └── meta
-     ├── episode_gripper0_len (2,) int64
-     ├── episode_rgb0_len (2,) int64
-     ├── episode_robot0_len (2,) int64
-     └── episode_wrench0_len (2,) int64
+     ├── episode_depth0_len (200,) int64
+     ├── episode_gripper0_len (200,) int64
+     ├── episode_rgb0_len (200,) int64
+     ├── episode_robot0_len (200,) int64
+     ├── episode_ultrawide0_len (200,) int64
+     └── episode_wrench0_len (200,) int64
+
 ```
 
 Wrench data order assumption: [Fx, Fy, Fz, Mx, My, Mz]
