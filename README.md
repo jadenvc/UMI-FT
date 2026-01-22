@@ -363,7 +363,11 @@ In Scripting/Interactive Scripting, paste [the driver code here](https://github.
 Then update the wsg gripper IP in the [corresponding hardware config field](https://github.com/yifan-hou/hardware_interfaces/blob/main/workcell/table_top_manip/config/right_arm_coinft.yaml#L113-L128).
 
 ## Setup iPhone for streaming
-Build the umi-day APP. (TODO:Hojung/Austin)
+Set IP address and port in the iPhone app `umi_day_iphone/ViewController` (App coming soon):
+```py
+   var hostIP: String = "192.168.2.18"
+   var hostPort: Int = 5555
+```
 
 Update the iPhone ip at the top of umift_env_runner.py: 
 ``` py
