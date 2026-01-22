@@ -257,6 +257,10 @@ Wrench data order assumption: [Fx, Fy, Fz, Mx, My, Mz]
 Wrench body frame and world frame transformation reference from [Modern Robotics, Lynch & Park](https://hades.mech.northwestern.edu/images/7/7f/MR.pdf#page=126.68) 
 
 
+
+umift_data_visualization.png
+
+
 # Policy Training
 
 ## Training the manipulation policy
