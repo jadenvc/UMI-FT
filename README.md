@@ -4,12 +4,12 @@ Official code base for UMI-FT.
 
 # Data collection
 UMI-FT lets you collect forceful manipulation data *without* a robot.
-Please refer to [UMI-FT Hardware Instructions]([https://github.com/real-stanford/UMI-FT](https://docs.google.com/document/d/e/2PACX-1vRrfSfjj3ct5u4bdyJYX92zH3QwZahU1D0nfb9wjb6GqDXqEZYVsaxwcCh1gwJgjRlq1fbgLJECGoPf/pub)) for building UMI-FT.
+Please refer to [UMI-FT Hardware Instructions]([https://docs.google.com/document/d/e/2PACX-1vRrfSfjj3ct5u4bdyJYX92zH3QwZahU1D0nfb9wjb6GqDXqEZYVsaxwcCh1gwJgjRlq1fbgLJECGoPf/pub]) for building UMI-FT.
 
 Please refer to [UMI-FT iPhone App (coming soon)](https://github.com/real-stanford/UMI-FT) for installing the data collection app on the iPhone.
 
 
-1. Install [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) and the UMIF_Data package.
+1. Install [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) and the UMIFT_Data package.
    ```bash
     pip install -e .
    ```
