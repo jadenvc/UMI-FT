@@ -53,6 +53,9 @@ def isostringformat_to_timestamp(iso_format_time):
     Args:
         iso_format_time: str, ARKit time in ISO format
     """
+    # Handle 'Z' suffix (UTC indicator) which fromisoformat doesn't support before Python 3.11
+    if iso_format_time.endswith('Z'):
+        iso_format_time = iso_format_time[:-1] + '+00:00'
     return datetime.fromisoformat(iso_format_time).timestamp()
 
 def ntp_time_to_timestamp(ntp_time):

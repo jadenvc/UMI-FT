@@ -6,8 +6,8 @@
 umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
-raw_umi_data_dir=/store/real/hjchoi92/data/real/umift # (USER TODO) change this to the directory where the raw umi iphone data are saved on your computer
-session_name="zucchini-wild-b0" # (USER TODO) change this to the session name of the raw umi iphone data
+raw_umi_data_dir=/Users/jadenclark/Documents/UMI-FT/UMI-FT_Data/data/ #umift_data # (USER TODO) change this to the directory where the raw umi iphone data are saved on your computer
+session_name="pegld" # (USER TODO) change this to the session name of the raw umi iphone data
 gripper_side="left" # (USER TODO) change this to the gripper side used in the session. left is default.
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 
@@ -36,10 +36,8 @@ calibration_dir=$umift_data_parent_dir/gripper_calibration
 # │   │   ├── iphone/
 # │   │   ├── all/
 
-iphone_data_dir=$umi_data_folder/UMI_iPhone
 ft_data_dir=$umi_data_folder/coinft
 
-echo 'iphone_dir' $iphone_data_dir
 echo 'out_dir' $processed_output_dir_session
 echo 'session_name' $session_name
 
@@ -49,8 +47,8 @@ if [ ! -d $raw_umi_data_dir ]; then
     exit 1
 fi
 
-if [ ! -d $iphone_data_dir ]; then
-    echo "Error: iphone data dir $iphone_data_dir does not exist"
+if [ ! -d $processed_output_dir_session ]; then
+    echo "Error: processed iphone data dir $processed_output_dir_session does not exist (run data_post_process_iphone first)"
     exit 1
 fi
 

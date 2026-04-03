@@ -26,6 +26,8 @@ import onnxruntime as ort
 import copy
 import serial
 import json
+import signal
+import sys
 
 # =========================
 # Fixed constants
@@ -81,7 +83,7 @@ def load_norms(norm_paths):
 
         with open(path, 'r') as f:
             data = json.load(f)
-            
+
         out.append({
             'mu_x':  np.array(data['mu_x'], dtype=np.float32),
             'sd_x':  np.array(data['sd_x'], dtype=np.float32),
@@ -139,6 +141,78 @@ def read_packet(ser):
     data2 = np.array(vals[COINFT_CH:], dtype=np.float64)
     return data1, data2
 
+def count_demos(result_dir):
+    """Count completed demos by counting existing LF CSV files across all date subdirs."""
+    n = 0
+    if os.path.isdir(result_dir):
+        for _, _, files in os.walk(result_dir):
+            n += sum(1 for f in files if f.endswith('_LF.csv'))
+    return n
+
+def save_data(data_bufs, counts, savingFileName, result_dir, args, start_ntp_time):
+    """Save collected data to CSV files. Returns (out_dir, stamp, demo_num) for use by save_plots."""
+    demo_num = count_demos(result_dir) + 1  # +1 for the demo about to be saved
+    trimmed = min(counts)
+    for i in range(2):
+        data_bufs[i] = data_bufs[i][:trimmed, :]
+
+    print("\n" + "="*50)
+    print("DATA COLLECTION SUMMARY")
+    print("="*50)
+    print(f"Sensor LF samples: {counts[0]}")
+    print(f"Sensor RF samples: {counts[1]}")
+    print(f"Trimmed to {trimmed} samples")
+
+    if trimmed == 0:
+        print("WARNING: No data collected to save!")
+        return None, None
+
+    # ---- Save CSVs (per-sensor) ----
+    date_dir = datetime.datetime.now().strftime("%y%m%d")
+    out_dir = os.path.join(result_dir, date_dir)
+    os.makedirs(out_dir, exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S_")
+    header_str = "Timestamp,Fx,Fy,Fz,Mx,My,Mz," + ",".join([f"C{i+1}" for i in range(NUM_RAW_CHANNELS)])
+
+    for i in range(2):
+        fname = f'UMIFT_data_{stamp}{savingFileName}_{FILE_NAME_ANNOTATIONS[i]}.csv'
+        fpath = os.path.join(out_dir, fname)
+        np.savetxt(fpath, data_bufs[i], delimiter=",", header=header_str, comments='')
+        print(f"✓ Saved {FILE_NAME_ANNOTATIONS[i]} to: {fpath}")
+
+    print("="*50)
+    print(f"Demo #{demo_num} saved successfully!")
+    print("="*50)
+    return out_dir, stamp, demo_num
+
+
+def save_plots(data_bufs, counts, out_dir, stamp, savingFileName, demo_num):
+    """Save FT plots as PNGs into a plots/ subfolder alongside the CSVs."""
+    trimmed = min(counts)
+    if trimmed == 0:
+        return
+    plots_dir = os.path.join(out_dir, 'plots')
+    os.makedirs(plots_dir, exist_ok=True)
+    for i in range(2):
+        sensor_label = FILE_NAME_ANNOTATIONS[i]
+        fig, (ax_f, ax_m) = plt.subplots(2, 1, figsize=(12, 6))
+        fig.suptitle(f"Demo #{demo_num} - Sensor {i} ({sensor_label}) - {savingFileName}")
+        ax_f.plot(data_bufs[i][:trimmed, 1], label='Fx')
+        ax_f.plot(data_bufs[i][:trimmed, 2], label='Fy')
+        ax_f.plot(data_bufs[i][:trimmed, 3], label='Fz')
+        ax_f.set_ylabel('Force [N]'); ax_f.grid(); ax_f.legend()
+        ax_m.plot(data_bufs[i][:trimmed, 4], label='Mx')
+        ax_m.plot(data_bufs[i][:trimmed, 5], label='My')
+        ax_m.plot(data_bufs[i][:trimmed, 6], label='Mz')
+        ax_m.set_ylabel('Moment [Nm]'); ax_m.set_xlabel('Sample')
+        ax_m.grid(); ax_m.legend()
+        fig.tight_layout()
+        fname = f'UMIFT_data_{stamp}{savingFileName}_{sensor_label}.png'
+        fig.savefig(os.path.join(plots_dir, fname), dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        print(f"✓ Plot saved: {fname}")
+    print(f"  -> {plots_dir}")
+
 # =========================
 # Main
 # =========================
@@ -147,6 +221,51 @@ def mainLoopTwoSensors(args):
     run_duration = args.duration
     result_dir = args.result_dir
     os.makedirs(result_dir, exist_ok=True)
+
+    # Global state for signal handler
+    state = {
+        'ser': None,
+        'data_bufs': None,
+        'counts': None,
+        'start_ntp_time': None,
+        'interrupted': False
+    }
+
+    def signal_handler(signum, frame):
+        """Handle Ctrl+C gracefully by saving data before exit."""
+        print("\n\n" + "="*50)
+        print("INTERRUPT RECEIVED (Ctrl+C)")
+        print("="*50)
+        print("Gracefully shutting down and saving data...")
+        state['interrupted'] = True
+
+        # Stop serial stream
+        if state['ser'] is not None:
+            try:
+                print("Stopping CoinFT stream...")
+                state['ser'].write(b'i')
+                time.sleep(0.02)
+                state['ser'].close()
+                print("✓ Serial port closed")
+            except Exception as e:
+                print(f"Warning during serial cleanup: {e}")
+
+        # Save data if we have any
+        if state['data_bufs'] is not None and state['counts'] is not None:
+            if not args.live_plot:  # Only save if live_plot is disabled
+                out_dir, stamp, demo_num = save_data(state['data_bufs'], state['counts'], savingFileName,
+                         result_dir, args, state['start_ntp_time'])
+                if out_dir is not None:
+                    save_plots(state['data_bufs'], state['counts'], out_dir, stamp, savingFileName, demo_num)
+            else:
+                print("Live plot was enabled - skipping save (temporally inconsistent)")
+
+        print("\nShutdown complete. Exiting.")
+        sys.exit(0)
+
+    # Register signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # ---- ONNX sessions & norms ----
     if len(args.models) != 2 or len(args.norms) != 2:
@@ -157,6 +276,7 @@ def mainLoopTwoSensors(args):
     # ---- Serial ----
     print(f"Opening UART: {args.port} @ {BAUD_RATE}")
     ser = serial.Serial(args.port, BAUD_RATE, timeout=READ_TIMEOUT)
+    state['ser'] = ser
     start_stream(ser)
     print("Started CoinFT streaming.")
 
@@ -185,9 +305,14 @@ def mainLoopTwoSensors(args):
     counts    = [0, 0]
     ma_buffers = [[], []]
 
+    # Store in state for signal handler
+    state['data_bufs'] = data_bufs
+    state['counts'] = counts
+
     # ---- Time base ----
     start_ntp_time   = get_ntp_time()
     start_local_time = time.time()
+    state['start_ntp_time'] = start_ntp_time
     print("Beginning acquisition...")
 
     # ---- Live plot setup (optional) ----
@@ -292,70 +417,60 @@ def mainLoopTwoSensors(args):
                 plt.pause(0.001)
 
     finally:
-        # Stop stream, close serial
-        print("Stopping acquisition.")
-        try:
-            ser.write(b'i')
-            time.sleep(0.02)
-        except Exception:
-            pass
-        ser.close()
+        # Only run cleanup if not already handled by signal
+        if not state['interrupted']:
+            # Stop stream, close serial
+            print("Stopping acquisition.")
+            try:
+                ser.write(b'i')
+                time.sleep(0.02)
+            except Exception:
+                pass
+            ser.close()
 
-    # ---- Trim & report ----
-    trimmed = min(counts)
-    for i in range(2):
-        data_bufs[i] = data_bufs[i][:trimmed, :]
-    print("Finished collecting data.")
-    print(f"Sensor LF samples: {counts[0]}; Sensor RF samples: {counts[1]}")
-    print(f"Trimmed to {trimmed} samples.")
+    # If we got here without interrupt, save normally
+    if not state['interrupted']:
+        # ---- Static plots ----
+        plt.ioff()
+        trimmed = min(counts)
+        if not args.live_plot:
+            out_dir, stamp, demo_num = save_data(data_bufs, counts, savingFileName, result_dir, args, start_ntp_time)
+        else:
+            demo_num = count_demos(result_dir) + 1
 
-    # ---- Static plots ----
-    plt.ioff()
-    if args.static_plot and trimmed > 0:
-        for i in range(2):
-            sensor_label = f"Sensor_{i}_{FILE_NAME_ANNOTATIONS[i]}"
-            # Forces
-            plt.figure()
-            plt.plot(data_bufs[i][:, 1], label='Fx')
-            plt.plot(data_bufs[i][:, 2], label='Fy')
-            plt.plot(data_bufs[i][:, 3], label='Fz')
-            plt.ylabel('Force [N]'); plt.xlabel('Sample')
-            plt.title(f"{sensor_label} - Forces (static)")
-            plt.grid(); plt.legend()
-            # Moments
-            plt.figure()
-            plt.plot(data_bufs[i][:, 4], label='Mx')
-            plt.plot(data_bufs[i][:, 5], label='My')
-            plt.plot(data_bufs[i][:, 6], label='Mz')
-            plt.ylabel('Moment [Nm]'); plt.xlabel('Sample')
-            plt.title(f"{sensor_label} - Moments (static)")
-            plt.grid(); plt.legend()
-        plt.show()
+        if args.static_plot and trimmed > 0:
+            for i in range(2):
+                sensor_label = f"Sensor_{i}_{FILE_NAME_ANNOTATIONS[i]}"
+                # Forces
+                plt.figure()
+                plt.plot(data_bufs[i][:trimmed, 1], label='Fx')
+                plt.plot(data_bufs[i][:trimmed, 2], label='Fy')
+                plt.plot(data_bufs[i][:trimmed, 3], label='Fz')
+                plt.ylabel('Force [N]'); plt.xlabel('Sample')
+                plt.title(f"Demo #{demo_num} - {sensor_label} - Forces (static)")
+                plt.grid(); plt.legend()
+                # Moments
+                plt.figure()
+                plt.plot(data_bufs[i][:trimmed, 4], label='Mx')
+                plt.plot(data_bufs[i][:trimmed, 5], label='My')
+                plt.plot(data_bufs[i][:trimmed, 6], label='Mz')
+                plt.ylabel('Moment [Nm]'); plt.xlabel('Sample')
+                plt.title(f"Demo #{demo_num} - {sensor_label} - Moments (static)")
+                plt.grid(); plt.legend()
+            plt.show()
 
-    if not args.live_plot:
-        # ---- Save CSVs (per-sensor) ----
-        date_dir = datetime.datetime.now().strftime("%y%m%d")
-        out_dir = os.path.join(result_dir, date_dir)
-        os.makedirs(out_dir, exist_ok=True)
-        stamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S_")
-        header_str = "Timestamp,Fx,Fy,Fz,Mx,My,Mz," + ",".join([f"C{i+1}" for i in range(NUM_RAW_CHANNELS)])
-
-        for i in range(2):
-            fname = f'UMIFT_data_{stamp}{savingFileName}_{FILE_NAME_ANNOTATIONS[i]}.csv'
-            fpath = os.path.join(out_dir, fname)
-            np.savetxt(fpath, data_bufs[i], delimiter=",", header=header_str, comments='')
-            print(f"Saved {FILE_NAME_ANNOTATIONS[i]} to: {fpath}")
-
-        print("Data Collection and Saving Complete!.")
-    else:
-        print("Disable live plot to save temporally consistent data.")
+        if not args.live_plot:
+            if out_dir is not None:
+                save_plots(data_bufs, counts, out_dir, stamp, savingFileName, demo_num)
+        else:
+            print("Disable live plot to save temporally consistent data.")
 
 # =========================
 # CLI
 # =========================
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="CoinFT UART Data Collection")
-    
+
     # Positional arguments (keeping original flow)
     parser.add_argument("filename", type=str, help="Filename for saving CSV")
     parser.add_argument("duration", type=float, help="Run duration in seconds")
@@ -366,7 +481,7 @@ if __name__ == '__main__':
     parser.add_argument("--window", type=int, default=10, help="Moving average window")
     parser.add_argument("--models", nargs='+', default=[], help="List of model paths")
     parser.add_argument("--norms", nargs='+', default=[], help="List of norm constant paths")
-    
+
     # Boolean flags (store_true means providing the flag sets it to True)
     parser.add_argument("--static_plot", action="store_true", help="Enable static plot at end")
     parser.add_argument("--live_plot", action="store_true", help="Enable live plotting")

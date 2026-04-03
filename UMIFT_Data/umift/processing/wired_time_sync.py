@@ -64,14 +64,15 @@ def fetch_ft_time_cvs(ft_data_dir, output_path):
     # Convert input path to Path object for easier handling
     data_path = Path(ft_data_dir)
     
-    # Find all CSV files in the directory
-    csv_files = list(data_path.glob('*.csv'))
-    session_name = csv_files[0].parts[-3]   # eg: '/', 'Users', 'chuerpan', 'Documents', 'repo', 'umiFT', 'data', 'tmp_data', '0118-home-coinft-test-3', 'coinft', 'UMIFT_data_250118_220247_0118-home-coinft-test-3_LF.csv'
-    
-    # TODO: change it to be more specific than collection date in coinFT data saving script. The why: get the session name, for example, for the following file path: file_path = PosixPath('/Users/chuerpan/Documents/repo/umiFT/wired_collection/Python/Data/241119/result_241119_155152_20241119_meeting_room.csv'), this will get '241119'.
-    
+    # Find all CSV files in the directory (recursively search subdirectories)
+    csv_files = list(data_path.glob('**/*.csv'))
+
     if not csv_files:
         raise FileNotFoundError(f"No CSV files found in {ft_data_dir}")
+
+    # Get session name from path (handle both direct files and files in date subdirectories)
+    # eg: coinft/260130/UMIFT_data_260130_120326_try2_LF.csv -> session is 2 levels up from coinft
+    session_name = csv_files[0].parts[-4] if len(csv_files[0].parts) >= 4 else csv_files[0].parts[-3]
     color_print(f'csv_file: {csv_files}', color = 'cyan')
 
     for csv_file in csv_files:
@@ -577,7 +578,9 @@ def fetch_depth_time_map_idx_demo_level(raw_file_dir, end=-1, every=1, depth_out
     # eg. ('/', 'Users', 'chuerpan', 'Documents', 'repo', 'umiFT', 'data', 'tmp_data', '0118-home-coinft-test-3', 'processed_data', 'gopro_iphone', '2025-01-19', '2025-01-19T06-01-27.409Z_85713_0118-home-coinft-test-3_demonstration')
 
     raw_file = os.path.join(raw_file_dir, f'{side}_depth.raw')
-    assert os.path.exists(raw_file), f'{raw_file} does not exist'
+    if not os.path.exists(raw_file):
+        print(f'Warning: depth file not found, skipping depth for: {raw_file}')
+        return None
 
     info_print(f'raw_depth_file :{raw_file}')
     depth_array = load_depth(raw_file)
@@ -797,13 +800,17 @@ def fetch_depth_time(
     meta_data_dict = {}
 
     for raw_file_dir in demo_dirs:
-        depth_dict_demo = fetch_depth_time_map_idx_demo_level(raw_file_dir = raw_file_dir, 
-                                                    end = end, 
-                                                    every = every, 
-                                                    depth_output_res = depth_output_res, 
-                                                    verbose = False, 
+        depth_dict_demo = fetch_depth_time_map_idx_demo_level(raw_file_dir = raw_file_dir,
+                                                    end = end,
+                                                    every = every,
+                                                    depth_output_res = depth_output_res,
+                                                    verbose = False,
                                                     side = side)
-        depth_data_dict[depth_dict_demo['fileName']] = depth_dict_demo
+        if depth_dict_demo is None:
+            file_name = Path(raw_file_dir).parts[-1]
+            depth_data_dict[file_name] = None
+        else:
+            depth_data_dict[depth_dict_demo['fileName']] = depth_dict_demo
 
 
     depth_dict['data'] = depth_data_dict
@@ -817,6 +824,17 @@ def fetch_depth_time(
         if matched_demo_dict_key is None:
             print(f"Error: image demo name: {demo_name} not found in campose_dic")
             exit(0)
+
+        if depth_data_dict[demo_name] is None:
+            cam_length = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0]
+            map_to_depth_idx = np.arange(cam_length // 2).repeat(2)
+            if len(map_to_depth_idx) < cam_length:
+                map_to_depth_idx = np.append(map_to_depth_idx, map_to_depth_idx[-1] + 1)
+            depth_data_dict[demo_name] = {
+                'depthData': np.zeros((cam_length, depth_output_res[0], depth_output_res[1], 3), dtype=np.float16),
+                'fileName': demo_name,
+                'rgbToDepthIdx': map_to_depth_idx.astype(np.uint32),
+            }
 
         assert depth_data_dict[demo_name]['depthData'].shape[0] == campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0],\
             f'imgData.shape[0]: {depth_data_dict[demo_name]["depthData"].shape[0]}, camPoseTimeStamp.shape[0]: {campose_dic["data"][matched_demo_dict_key]["camPoseTimeStamp"].shape[0]}'
