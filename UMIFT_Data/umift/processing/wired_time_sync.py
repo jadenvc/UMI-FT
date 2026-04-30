@@ -363,7 +363,11 @@ def fetch_image_time_demo_level(mp4_file_dir, end=-1, every=1, image_output_res=
     raw_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     raw_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_end = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    
+
+    if raw_width == 0 or raw_height == 0:
+        cap.release()
+        raise RuntimeError(f"Could not read video (corrupt or missing moov atom): {mp4_file}")
+
     info_print(f'Starting to load video from Frame 0 to Frame {frame_end} every {every} frame')
     # Downsample the image to a resolution close to the desired output image for speed.
     # For {side}_rgb.mp4, this would convert 1920 x 1440 to 358 x 268.
@@ -669,28 +673,43 @@ def fetch_image_time(
     meta_data_dict = {}
 
     for mp4_file_dir in demo_dirs:
-        img_dict_demo = fetch_image_time_demo_level(mp4_file_dir = mp4_file_dir, 
-                                                    end = end, 
-                                                    every = every, 
-                                                    image_output_res = image_output_res, 
-                                                    verbose = False, 
-                                                    side = side)
+        try:
+            img_dict_demo = fetch_image_time_demo_level(mp4_file_dir = mp4_file_dir,
+                                                        end = end,
+                                                        every = every,
+                                                        image_output_res = image_output_res,
+                                                        verbose = False,
+                                                        side = side)
+        except RuntimeError as e:
+            print(f"[WARNING] Skipping demo dir {mp4_file_dir}: {e}")
+            continue
         image_data_dict[img_dict_demo['fileName']] = img_dict_demo
 
     image_dict['data'] = image_data_dict
     meta_data_dict['session_name'] = session_name
     image_dict['meta'] = meta_data_dict
     
+    invalid_image_demos = []
     for demo_name, _ in image_dict['data'].items():
         print(f"demo name: {demo_name}")
         matched_demo_dict_key, matched_demo_dict = find_key_and_timestamp_by_demo(demo_name=demo_name, dic = campose_dic)
-        
+
         if matched_demo_dict_key is None:
-            print(f"Error: image demo name: {demo_name} not found in campose_dic")
-            exit(0)
-        assert image_data_dict[demo_name]['imgData'].shape[0] == campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0],\
-            f'imgData.shape[0]: {image_data_dict[demo_name]["imgData"].shape[0]}, camPoseTimeStamp.shape[0]: {campose_dic["data"][matched_demo_dict_key]["camPoseTimeStamp"].shape[0]}'
+            print(f"[WARNING] Image demo {demo_name} not found in campose_dic — skipping.")
+            invalid_image_demos.append(demo_name)
+            continue
+
+        img_frames = image_data_dict[demo_name]['imgData'].shape[0]
+        cam_frames = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0]
+        if img_frames != cam_frames:
+            print(f"[WARNING] Image frame count mismatch for {demo_name}: img={img_frames}, campose={cam_frames} — skipping.")
+            invalid_image_demos.append(demo_name)
+            continue
+
         image_data_dict[demo_name]['imgTimeStamp'] = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp']
+
+    for demo_name in invalid_image_demos:
+        del image_data_dict[demo_name]
 
     image_data_dict = reorg_demo_data_ordered_by_time(image_data_dict, data_prefix = 'img')
  
@@ -748,17 +767,26 @@ def fetch_ultrawide_image_time(
     meta_data_dict['session_name'] = session_name
     uw_image_dict['meta'] = meta_data_dict
     
+    invalid_uw_demos = []
     for demo_name, _ in uw_image_dict['data'].items():
         print(f"demo name: {demo_name}")
-    
+
         matched_demo_dict_key, matched_demo_dict = find_key_and_timestamp_by_demo(demo_name=demo_name, dic = campose_dic)
 
         if matched_demo_dict_key is None:
-            print(f"Error: image demo name: {demo_name} not found in campose_dic")
-            exit(0)
-        assert uw_image_data_dict[demo_name]['rgbToUWIdx'].shape[0] == campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0],\
-            f'rgbToUWIdx.shape[0]: {uw_image_data_dict[demo_name]["rgbToUWIdx"].shape[0]}, camPoseTimeStamp.shape[0]: {campose_dic["data"][matched_demo_dict_key]["camPoseTimeStamp"].shape[0]}'
+            print(f"[WARNING] Ultrawide demo {demo_name} not found in campose_dic — skipping.")
+            invalid_uw_demos.append(demo_name)
+            continue
 
+        uw_frames = uw_image_data_dict[demo_name]['rgbToUWIdx'].shape[0]
+        cam_frames = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0]
+        if uw_frames != cam_frames:
+            print(f"[WARNING] Ultrawide frame count mismatch for {demo_name}: uw={uw_frames}, campose={cam_frames} — skipping.")
+            invalid_uw_demos.append(demo_name)
+            continue
+
+    for demo_name in invalid_uw_demos:
+        del uw_image_data_dict[demo_name]
 
     uw_image_data_dict = reorg_demo_data_ordered_by_time(uw_image_data_dict, data_prefix = 'uwImg')
  
@@ -817,13 +845,15 @@ def fetch_depth_time(
     meta_data_dict['session_name'] = session_name
     depth_dict['meta'] = meta_data_dict
     
+    invalid_depth_demos = []
     for demo_name, _ in depth_dict['data'].items():
         print(f"demo name: {demo_name}")
         matched_demo_dict_key, matched_demo_dict = find_key_and_timestamp_by_demo(demo_name=demo_name, dic = campose_dic)
 
         if matched_demo_dict_key is None:
-            print(f"Error: image demo name: {demo_name} not found in campose_dic")
-            exit(0)
+            print(f"[WARNING] Depth demo {demo_name} not found in campose_dic — skipping.")
+            invalid_depth_demos.append(demo_name)
+            continue
 
         if depth_data_dict[demo_name] is None:
             cam_length = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0]
@@ -836,8 +866,13 @@ def fetch_depth_time(
                 'rgbToDepthIdx': map_to_depth_idx.astype(np.uint32),
             }
 
-        assert depth_data_dict[demo_name]['depthData'].shape[0] == campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0],\
-            f'imgData.shape[0]: {depth_data_dict[demo_name]["depthData"].shape[0]}, camPoseTimeStamp.shape[0]: {campose_dic["data"][matched_demo_dict_key]["camPoseTimeStamp"].shape[0]}'
+        depth_frames = depth_data_dict[demo_name]['depthData'].shape[0]
+        cam_frames = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp'].shape[0]
+        if depth_frames != cam_frames:
+            print(f"[WARNING] Depth frame count mismatch for {demo_name}: depth={depth_frames}, campose={cam_frames} — skipping.")
+            invalid_depth_demos.append(demo_name)
+            continue
+
         depth_data_dict[demo_name]['depthTimeStamp'] = campose_dic['data'][matched_demo_dict_key]['camPoseTimeStamp']
 
         # downsample depth and depth_time to 30Hz
@@ -850,6 +885,9 @@ def fetch_depth_time(
             f'camPoseTimeStamp.shape[0]: {campose_dic["data"][matched_demo_dict_key]["camPoseTimeStamp"].shape[0]}, rgbToDepthIdx.shape[0]: {depth_data_dict[demo_name]["rgbToDepthIdx"].shape[0]}'
         assert depth_data_dict[demo_name]['depthData'].dtype == np.float16, \
             f"Expected float16, got {depth_data_dict[demo_name]['depthData'].dtype}"
+
+    for demo_name in invalid_depth_demos:
+        del depth_data_dict[demo_name]
 
     depth_data_dict = reorg_demo_data_ordered_by_time(depth_data_dict, data_prefix = 'depth')
  

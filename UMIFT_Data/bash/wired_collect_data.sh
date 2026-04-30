@@ -11,7 +11,7 @@ umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 raw_umi_data_dir=/Users/jadenclark/Documents/UMI-FT/UMI-FT_Data/data
-session_name="pegld" # set the exact same session name as in your iPhone
+session_name="greyred" # set the exact same session name as in your iPhone
 time=50 # how long the CoinFT data collection lasts. CoinFT data collection should start earlier than the iPhone data collection, and end later.
 # PORT="/dev/tty.usbmodem179386601" # serial port to the CoinFTs
 PORT="/dev/tty.usbmodem181377401" # serial port to the CoinFTs

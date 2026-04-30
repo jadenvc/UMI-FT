@@ -42,22 +42,83 @@ def process_ft_img_campose_gripper(args):
     print("campose data length: ", len(campose_dic['data']))
     print("gripper data length: ", len(gripper_dic['data']))
 
-    for ft_demo_idx in ft_dic['data']['left'].keys():
-        # loop through each ft demo index since ft data is always saved
-        ft_time_range = [ft_dic['data']['left'][ft_demo_idx]['ftTimeStamp'][0], ft_dic['data']['left'][ft_demo_idx]['ftTimeStamp'][-1]]
-        campose_time_range = [campose_dic['data'][ft_demo_idx]['camPoseTimeStamp'][0], campose_dic['data'][ft_demo_idx]['camPoseTimeStamp'][-1]]
+    # Time-overlap matching: pair each FT demo with the first campose demo whose time range overlaps.
+    # Both dicts are already sorted chronologically, so we use a single forward pointer for campose.
+    ft_indices = sorted(ft_dic['data']['left'].keys())
+    cam_indices = sorted(campose_dic['data'].keys())
 
-        if ft_time_range[0] > campose_time_range[1] or ft_time_range[1] < campose_time_range[0]:
-            print(f"FT and Campose data do not match in time for demo {ft_demo_idx}. Please check the data.")
-            print(f"FT time range: {ft_time_range}")
-            print(f"FT left filename: {ft_dic['data']['left'][ft_demo_idx]['fileName']}")
-            print(f"FT right filename: {ft_dic['data']['right'][ft_demo_idx]['fileName']}")
-            print(f"Campose time range: {campose_time_range}")
-            print(f"Campose filename: {campose_dic['data'][ft_demo_idx]['fileName']}")
+    matched_pairs = []        # list of (ft_idx, cam_idx)
+    unmatched_ft = []         # ft indices with no campose match
+    unmatched_cam = []        # cam indices skipped before any match or left over
 
-            return None
+    cam_pointer = 0
+    for ft_idx in ft_indices:
+        ft_start = ft_dic['data']['left'][ft_idx]['ftTimeStamp'][0]
+        ft_end   = ft_dic['data']['left'][ft_idx]['ftTimeStamp'][-1]
+        matched = False
 
-    assert len(ft_dic['data']['left']) == len(campose_dic['data']), "FT and Campose data do not match in length. Please check the data."
+        while cam_pointer < len(cam_indices):
+            cam_idx = cam_indices[cam_pointer]
+            cam_start = campose_dic['data'][cam_idx]['camPoseTimeStamp'][0]
+            cam_end   = campose_dic['data'][cam_idx]['camPoseTimeStamp'][-1]
+
+            if cam_end < ft_start:
+                # campose demo is entirely before this FT demo — skip it
+                unmatched_cam.append(cam_idx)
+                cam_pointer += 1
+                continue
+
+            if cam_start > ft_end:
+                # campose demo is entirely after this FT demo — no match possible
+                break
+
+            # time ranges overlap
+            matched_pairs.append((ft_idx, cam_idx))
+            cam_pointer += 1
+            matched = True
+            break
+
+        if not matched:
+            unmatched_ft.append(ft_idx)
+
+    # any remaining campose demos are unmatched
+    for cam_idx in cam_indices[cam_pointer:]:
+        unmatched_cam.append(cam_idx)
+
+    # print matching summary
+    print(f"\n=== Matching Summary ===")
+    print(f"Matched: {len(matched_pairs)} demo pair(s)")
+    if unmatched_ft:
+        print(f"Unmatched FT demos ({len(unmatched_ft)}):")
+        for ft_idx in unmatched_ft:
+            ft_start = ft_dic['data']['left'][ft_idx]['ftTimeStamp'][0]
+            ft_end   = ft_dic['data']['left'][ft_idx]['ftTimeStamp'][-1]
+            print(f"  [ft {ft_idx}] time range: [{ft_start}, {ft_end}] | LF: {ft_dic['data']['left'][ft_idx]['fileName']} | RF: {ft_dic['data']['right'][ft_idx]['fileName']}")
+    if unmatched_cam:
+        print(f"Unmatched Campose demos ({len(unmatched_cam)}):")
+        for cam_idx in unmatched_cam:
+            cam_start = campose_dic['data'][cam_idx]['camPoseTimeStamp'][0]
+            cam_end   = campose_dic['data'][cam_idx]['camPoseTimeStamp'][-1]
+            print(f"  [cam {cam_idx}] time range: [{cam_start}, {cam_end}] | file: {campose_dic['data'][cam_idx]['fileName']}")
+    print(f"========================\n")
+
+    if not matched_pairs:
+        print("No matched demo pairs found. Cannot proceed.")
+        return None
+
+    # rebuild dicts with contiguous indices using only matched pairs
+    matched_ft_dic = {'meta': ft_dic['meta'], 'data': {'left': {}, 'right': {}}}
+    matched_campose_dic = {'meta': campose_dic['meta'], 'data': {}}
+    matched_gripper_dic = {'data': {}}
+    for new_idx, (ft_idx, cam_idx) in enumerate(matched_pairs):
+        matched_ft_dic['data']['left'][new_idx]  = ft_dic['data']['left'][ft_idx]
+        matched_ft_dic['data']['right'][new_idx] = ft_dic['data']['right'][ft_idx]
+        matched_campose_dic['data'][new_idx]     = campose_dic['data'][cam_idx]
+        matched_gripper_dic['data'][new_idx]     = gripper_dic['data'][cam_idx]
+
+    ft_dic       = matched_ft_dic
+    campose_dic  = matched_campose_dic
+    gripper_dic  = matched_gripper_dic
 
     print(f'Fetching RGB images')
     image_dict_trimmed = fetch_image_time(image_data_dir=args.visual_data_dir, 
@@ -91,15 +152,56 @@ def process_ft_img_campose_gripper(args):
 
 
 
-    aligned_data_dict = {'ft_dic_trimmed': ft_dic, 
-                 'campose_dic_trimmed': campose_dic, 
+    # Reconcile: fetch functions may have skipped demos with corrupt/mismatched data.
+    # Find the intersection of demo names across all modalities, then rebuild all dicts
+    # with consistent sequential indices so downstream zarr creation stays aligned.
+    def get_filenames(d, key='fileName'):
+        return {v[key] for v in d['data'].values()}
+
+    valid_names = (
+        get_filenames(campose_dic, 'fileName')
+        & get_filenames(image_dict_trimmed, 'fileName')
+        & get_filenames(uw_image_dict_trimmed, 'fileName')
+        & get_filenames(depth_dict_trimmed, 'fileName')
+    )
+
+    dropped = get_filenames(campose_dic, 'fileName') - valid_names
+    if dropped:
+        print(f"[WARNING] Dropping {len(dropped)} demo(s) missing from one or more modalities: {dropped}")
+
+    def filter_and_reindex(d, name_key='fileName'):
+        kept = sorted(
+            [(k, v) for k, v in d['data'].items() if v[name_key] in valid_names],
+            key=lambda x: x[0]
+        )
+        d['data'] = {new_idx: v for new_idx, (_, v) in enumerate(kept)}
+        return d
+
+    ft_dic['data']['left']  = {new_idx: v for new_idx, (_, v) in enumerate(
+        sorted([(k, v) for k, v in ft_dic['data']['left'].items()
+                if campose_dic['data'][k]['fileName'] in valid_names], key=lambda x: x[0]))}
+    ft_dic['data']['right'] = {new_idx: v for new_idx, (_, v) in enumerate(
+        sorted([(k, v) for k, v in ft_dic['data']['right'].items()
+                if campose_dic['data'][k]['fileName'] in valid_names], key=lambda x: x[0]))}
+    campose_dic  = filter_and_reindex(campose_dic,  'fileName')
+    gripper_dic  = filter_and_reindex(gripper_dic,  'fileName')
+    image_dict_trimmed       = filter_and_reindex(image_dict_trimmed,    'fileName')
+    uw_image_dict_trimmed    = filter_and_reindex(uw_image_dict_trimmed, 'fileName')
+    depth_dict_trimmed       = filter_and_reindex(depth_dict_trimmed,    'fileName')
+
+    if not campose_dic['data']:
+        print("No valid demos remain after modality reconciliation.")
+        return None
+
+    aligned_data_dict = {'ft_dic_trimmed': ft_dic,
+                 'campose_dic_trimmed': campose_dic,
                  'gripper_dic_trimmed': gripper_dic,
                  'image_dict_trimmed': image_dict_trimmed,
                  'uw_image_dict_trimmed': uw_image_dict_trimmed,
                  'depth_dict_trimmed': depth_dict_trimmed}
- 
+
     num_frames, expected_H, expected_W, chan = image_dict_trimmed['data'][0]['imgData'].shape
-    
+
     return aligned_data_dict, expected_H, expected_W
 
 def get_session_name(args):

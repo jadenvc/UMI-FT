@@ -7,7 +7,7 @@ umift_data_parent_dir=$(pwd)
 
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 raw_umi_data_dir=/Users/jadenclark/Documents/UMI-FT/UMI-FT_Data/data/ #umift_data # (USER TODO) change this to the directory where the raw umi iphone data are saved on your computer
-session_name="pegld" # (USER TODO) change this to the session name of the raw umi iphone data
+session_name="pegbd" # (USER TODO) change this to the session name of the raw umi iphone data
 gripper_side="left" # (USER TODO) change this to the gripper side used in the session. left is default.
 ###### TODO: CHANGE THESE VARS FOR LOCAL SETUP ######
 
